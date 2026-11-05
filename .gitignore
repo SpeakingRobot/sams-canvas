@@ -1,0 +1,8 @@
+node_modules/
+release/
+release-*/
+*.tar.gz
+.env*
+/*-preview.jpg
+/*-preview.png
+/*.log

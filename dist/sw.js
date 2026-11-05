@@ -1,0 +1,5 @@
+const CACHE='sams-canvas-v15';
+const ASSETS=['./','./index.html','./style.css?v=15','./editor.js?v=15','./gestures.js?v=15','./app.js?v=15','./view-session.js?v=15','./welcome.js?v=15','./calendar.js?v=15','./projects.js?v=15','./canvas-tools.js?v=15','./studio.js?v=15','./studio.css?v=15','./knife-cursor.svg','./pen-cursor.svg','./audio/birds.ogg','./audio/wind.ogg','./audio/stream.ogg','./audio/rain.ogg','./icon.svg','./icon-192.png','./icon-512.png','./manifest.webmanifest','./cozy-world.svg'];
+self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));self.skipWaiting()});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim()});
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||new URL(e.request.url).origin!==self.location.origin)return;e.respondWith(fetch(e.request).then(r=>{if(r.ok){const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy))}return r}).catch(()=>caches.match(e.request).then(r=>r||(e.request.mode==='navigate'?caches.match('./index.html'):Response.error()))))});

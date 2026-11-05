@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#202024"><meta name="description" content="Your ideas, connected. A thoughtful research, planning and publishing workspace for creators.">
+  <title>Sam’s Canvas — Creator Studio</title>
+  <script>try{document.documentElement.dataset.welcome=sessionStorage.getItem('sams-canvas.entered')==='1'?'closed':'open'}catch{document.documentElement.dataset.welcome='open'}</script>
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem('threadline.theme')||'dark'}catch{document.documentElement.dataset.theme='dark'}</script>
+  <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css?v=15" id="appStyles">
+<link rel="stylesheet" href="./studio.css?v=15">
+</head>
+<body>
+<svg class="svg-library" aria-hidden="true"><defs>
+<symbol id="i-thread" viewBox="0 0 24 24"><path d="M7 3h7a5 5 0 0 1 0 10H9a4 4 0 0 0 0 8h8M7 3v10m10-2v10"/></symbol>
+<symbol id="i-board" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="m8 22 4-4 4 4M8 9h3m-3 4h7m1-4h1"/></symbol>
+<symbol id="i-connect" viewBox="0 0 24 24"><rect x="3" y="3" width="6" height="6" rx="2"/><rect x="15" y="15" width="6" height="6" rx="2"/><path d="M6 9v6a3 3 0 0 0 3 3h6m0-12h6m-3-3v6"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18m-13 5h1m6 0h1"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+<symbol id="i-cursor" viewBox="0 0 24 24"><path d="m5 3 15 9-7 1-3 7z"/></symbol>
+<symbol id="i-hand" viewBox="0 0 24 24"><path d="M8 12V5a2 2 0 0 1 4 0v6-7a2 2 0 0 1 4 0v7-5a2 2 0 0 1 4 0v8c0 5-3 8-7 8-3 0-5-2-7-5l-3-5c-1-2 2-4 3-2l2 2"/></symbol>
+<symbol id="i-text" viewBox="0 0 24 24"><path d="M4 7V4h16v3M12 4v16m-4 0h8"/></symbol>
+<symbol id="i-note" viewBox="0 0 24 24"><path d="M14 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9zM14 21v-7h7M7 8h10m-10 4h4"/></symbol>
+<symbol id="i-shape" viewBox="0 0 24 24"><rect x="3" y="3" width="13" height="13" rx="2"/><circle cx="16" cy="16" r="6"/></symbol>
+<symbol id="i-pen" viewBox="0 0 24 24"><path d="m14 5 4-3 4 4-3 4M14 5l5 5-7 7-5-5zM7 12l-3 3-2 7 7-2 3-3M2 22l5-5"/><circle cx="8" cy="16" r="1.1"/><path d="m16 7 2 2"/></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="m10 8 3-3a5 5 0 0 1 7 7l-3 3M14 16l-3 3a5 5 0 0 1-7-7l3-3m1 7 8-8"/></symbol>
+<symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M11 3v18"/></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="m8 4-5 5 5 5M3 9h11a7 7 0 0 1 0 14"/></symbol>
+<symbol id="i-redo" viewBox="0 0 24 24"><path d="m16 4 5 5-5 5m5-5H10a7 7 0 0 0 0 14"/></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z"/></symbol>
+<symbol id="i-sound" viewBox="0 0 24 24"><path d="m11 4-6 5H2v6h3l6 5zM16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></symbol>
+<symbol id="i-mute" viewBox="0 0 24 24"><path d="m11 4-6 5H2v6h3l6 5zM16 9l6 6m-6 0 6-6"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 5m0 3h.01"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V3h8v3M5 6l1 15h12l1-15M9 10v7m6-7v7"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></symbol>
+<symbol id="i-external" viewBox="0 0 24 24"><path d="M14 3h7v7m0-7L10 14M10 4H4v16h16v-6"/></symbol>
+<symbol id="i-fit" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 8V5a2 2 0 0 1 2-2h5l3 4h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M15 4H5a2 2 0 0 0-2 2v10"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14a9 9 0 0 1-10-11 9 9 0 1 0 10 11z"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></symbol>
+<symbol id="i-rectangle" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/></symbol>
+<symbol id="i-ellipse" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="7"/></symbol>
+<symbol id="i-diamond" viewBox="0 0 24 24"><path d="m12 3 9 9-9 9-9-9z"/></symbol>
+<symbol id="i-triangle" viewBox="0 0 24 24"><path d="m12 3 10 18H2z"/></symbol>
+<symbol id="i-sequence" viewBox="0 0 24 24"><rect x="2" y="5" width="14" height="14" rx="3"/><path d="m16 10 6-4v12l-6-4"/><circle cx="9" cy="12" r="3"/></symbol>
+<symbol id="i-knife" viewBox="0 0 24 24"><g transform="translate(24 0) scale(-1 1)"><path d="m11 7 11 15C15 22 9 18 6 13Z"/><path d="M3 1a2 2 0 0 0-2 3l8 9 4-4-8-8Z" fill="currentColor" stroke="none"/></g></symbol>
+<symbol id="i-history" viewBox="0 0 24 24"><path d="M3 11a9 9 0 1 1 2 7M3 4v7h7M12 7v5l3 2"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></symbol>
+<symbol id="i-clapper" viewBox="0 0 24 24"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 9V4l18-2v5zM7 4l3 4m3-5 3 4m2-4 3 3m-11 6 5 3-5 3z"/></symbol>
+<symbol id="i-stamp" viewBox="0 0 24 24"><path d="M9 12V6a3 3 0 0 1 6 0v6l4 3v3H5v-3zM3 18h18v3H3z"/></symbol>
+<symbol id="i-roundedrect" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="5"/></symbol><symbol id="i-hexagon" viewBox="0 0 24 24"><path d="m7 3 10 0 5 9-5 9H7l-5-9Z"/></symbol><symbol id="i-parallelogram" viewBox="0 0 24 24"><path d="M7 5h15l-5 14H2Z"/></symbol><symbol id="i-cylinder" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 4 18 4 18 0V5"/></symbol><symbol id="i-speech" viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-6l-6 4v-4H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3 6 7 1-5 5 1 8-6-4-6 4 1-8-5-5 7-1Z"/></symbol><symbol id="i-cloud" viewBox="0 0 24 24"><path d="M6 20C0 20 0 11 5 10 3 3 11 0 14 5 19 1 24 7 21 11 27 15 23 21 19 20Z"/></symbol><symbol id="i-blockarrow" viewBox="0 0 24 24"><path d="M2 7h12V2l9 10-9 10v-5H2Z"/></symbol><symbol id="i-stamp" viewBox="0 0 24 24"><path d="M8 15h8l-1-5V7a3 3 0 0 0-6 0v3zM5 15h14v4H5zM4 22h16"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></symbol><symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13M9 8l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/></symbol></defs></svg>
+<section id="welcomeScreen" class="welcome-screen" aria-label="Welcome to Sam’s Canvas"><div class="welcome-art" aria-hidden="true"><svg class="welcome-wires" viewBox="0 0 1400 850" preserveAspectRatio="none"><path d="M200 170C530 170 260 680 570 680S900 650 1100 460"/><path d="M1040 180C780 180 1120 630 1150 680"/></svg><div class="welcome-float welcome-note"><small>A LITTLE THOUGHT</small><strong>Every story starts<br>with a spark.</strong><span>Make room for your next idea.</span></div><div class="welcome-float welcome-shot"><i></i><small>SHOT 01 / TAKE 01</small><strong>Lights. Camera.<br>Your story.</strong><span>Opening scene · Ready to record</span></div><div class="welcome-float welcome-picture"><img src="./cozy-world.svg" alt=""><span>Find the feeling. Follow the story.</span></div><div class="welcome-float welcome-stamp">GOOD IDEA</div><div class="welcome-float welcome-mini-calendar"><small>THE NEXT CHAPTER</small><div><span class="">12</span><span class="">13</span><span class="">14</span><span class="">15</span><span class="marked">16</span><span class="">17</span><span class="">18</span><span class="">19</span><span class="">20</span></div></div></div><div class="welcome-copy"><span class="welcome-kicker">YOUR CREATIVE SPACE</span><h1>Sam’s Canvas<span>.</span></h1><p>Content planning for creators.</p><button id="enterStudio" class="welcome-enter">Enter<svg aria-hidden="true"><use href="#i-arrow"/></svg></button><span class="welcome-footnote">A little structure. A lot of possibility.</span></div></section>
+<div id="app">
+  <aside class="sidebar">
+    <a href="#" class="brand" aria-label="Sam’s Canvas home"><span class="brand-mark"><svg><use href="#i-thread"/></svg></span>threadline<span class="brand-dot">.</span></a>
+    <button class="workspace" id="workspaceButton"><span class="workspace-icon">S</span><span><strong>My studio</strong><small>Personal workspace</small></span><svg><use href="#i-down"/></svg></button>
+    <div class="side-label">WORKSPACE</div>
+    <button class="side-link active" id="allBoards"><svg><use href="#i-board"/></svg>Your boards<span id="boardCount">3</span></button>
+    <button class="side-link" id="allTopics"><svg><use href="#i-connect"/></svg>Content library<span id="topicCount">3</span></button>
+    <div class="side-section"><span class="side-label">RESEARCH BOARDS</span><button class="icon-btn small" id="newBoardSide" title="New research board" aria-label="New research board"><svg><use href="#i-plus"/></svg></button></div>
+    <div id="boardList" class="board-list"></div>
+    <button id="newBoard" class="new-board"><svg><use href="#i-plus"/></svg>New board</button>
+    <div class="side-bottom"><div class="studio-note"><span class="tiny-spark">✳</span><strong>A little structure.<br>A lot more possibility.</strong><p>Make room for your next big idea.</p><span class="note-line"></span></div>
+    <button class="side-link utility" id="backupButton"><svg><use href="#i-download"/></svg>Workspace backup</button>
+    <button class="profile" id="profileButton"><span class="avatar">S</span><span><strong>Your creative space</strong><small>Saved on this device</small></span><span class="online-dot"></span></button></div>
+  </aside>
+  <main>
+    <header class="topbar"><span class="top-eyebrow"></span><nav class="stage-tabs" aria-label="Creator workflow"><span id="tabIndicator"></span><button data-tab="structure" class="selected"><svg aria-hidden="true"><use href="#i-connect"/></svg>Content</button><button data-tab="whiteboard"><svg aria-hidden="true"><use href="#i-board"/></svg>Whiteboard</button><button data-tab="shots"><svg aria-hidden="true"><use href="#i-sequence"/></svg>Shot Sequencer</button><button data-tab="overview"><svg aria-hidden="true"><use href="#i-calendar"/></svg>Content Calendar</button></nav><div class="top-actions"><button class="icon-btn" id="soundButton" title="Connection sounds on" aria-label="Toggle connection sounds"><svg><use href="#i-sound"/></svg></button><button class="icon-btn" id="helpButton" title="Help & shortcuts" aria-label="Help and shortcuts"><svg><use href="#i-help"/></svg></button><button class="top-avatar" id="avatarButton" title="Account & settings" aria-label="Account and settings" aria-haspopup="menu">S</button></div></header>
+    <section class="page-heading"><div><div class="eyebrow" id="pageEyebrow">THE START OF SOMETHING GOOD</div><h1 id="pageTitle">Give your ideas some room.</h1><p id="pageDescription">Collect the sparks. Find the story. Make something worth sharing.</p></div><div class="heading-actions" id="headingActions"></div></section>
+    <section id="whiteboardView" class="view"><div class="board-topbar"><div class="board-name"><img class="project-logo" src="./icon.svg" alt="Sam’s Canvas"><span class="board-dot"></span><input id="boardNameInput" aria-label="Content and board name" maxlength="120" placeholder="Name your content…"><button id="boardTitleButton"></button><span class="board-type">Research board</span></div><div class="board-top-right"><span id="saveState"><span></span>All changes saved</span><button id="boardMenu" class="icon-btn" title="Board options" aria-label="Project options"><svg><use href="#i-more"/></svg></button></div></div>
+      <div id="canvas" class="canvas" tabindex="0" aria-label="Research whiteboard. Use the toolbar to add items; drag cards to arrange."><div id="boardScene"><svg id="boardWires" class="board-wires"></svg><svg id="inkLayer" class="ink-layer"></svg><div id="nodes"></div></div><div class="canvas-top-note"><span class="green-dot"></span>Messy ideas welcome here.</div><div id="toolOptions" class="tool-options"></div>
+      <div class="canvas-bottom"><div class="zoom-control"><button class="icon-btn" id="zoomOut" aria-label="Zoom out">−</button><span id="zoomValue">100%</span><button class="icon-btn" id="zoomIn" aria-label="Zoom in">+</button><span class="divider"></span><button class="icon-btn" id="fitBoard" title="Fit board to screen" aria-label="Fit board to screen"><svg><use href="#i-fit"/></svg></button></div><div id="toolbar" class="toolbar" role="toolbar" aria-label="Whiteboard tools"></div><div class="history-control"><button class="icon-btn" id="undoButton" title="Undo · Ctrl Z" aria-label="Undo"><svg><use href="#i-undo"/></svg></button><button class="icon-btn" id="redoButton" title="Redo · Ctrl Shift Z" aria-label="Redo"><svg><use href="#i-redo"/></svg></button></div></div>
+      <div class="canvas-hint" id="canvasHint">Drag to arrange · Double-click to edit · Space to pan</div></div>
+    </section>
+    <section id="structureView" class="view hidden"><div class="structure-bar"><div><span class="live-dot"></span><strong id="structureCount">Your ideas, taking shape</strong><span class="muted">Drag a connector to a date. Make it a plan.</span></div><button class="text-btn" id="newTopicButton"><svg><use href="#i-plus"/></svg>New topic</button></div><div class="structure-body" id="structureBody"><div class="topic-field" id="topicField"><div class="field-label">YOUR CONTENT <span id="unscheduledCount"></span></div><svg id="scheduleWires"></svg><div id="topicCards"></div><div class="connection-tip"><svg><use href="#i-connect"/></svg><span>One idea. One connection.<br><strong>A little closer to hitting publish.</strong></span></div></div><aside class="date-rail"><div class="date-rail-head"><span>PUBLISHING PATCHBAY</span><div><button class="icon-btn small" id="prevMonth" aria-label="Previous month"><svg class="rotate"><use href="#i-chevron"/></svg></button><strong id="monthLabel"></strong><button class="icon-btn small" id="nextMonth" aria-label="Next month"><svg><use href="#i-chevron"/></svg></button></div><button id="jumpToday" class="text-btn small-text">Back to this month</button></div><div id="dateList"></div></aside></div></section>
+    <section id="overviewView" class="view hidden"><div class="overview-top"><div class="overview-stats" id="overviewStats"></div><div class="overview-controls"><button class="icon-btn" id="overviewPrev" aria-label="Previous month"><svg class="rotate"><use href="#i-chevron"/></svg></button><strong id="overviewMonth"></strong><button class="icon-btn" id="overviewNext" aria-label="Next month"><svg><use href="#i-chevron"/></svg></button><button class="text-btn" id="exportCalendar"><svg><use href="#i-download"/></svg>Export calendar</button></div></div><div class="agenda-wrap"><div class="agenda-caption"><span>YOUR PUBLISHING LINEUP</span><label class="search"><svg><use href="#i-search"/></svg><input id="agendaSearch" placeholder="Find a topic…" aria-label="Find a topic"></label></div><div id="agenda"></div><div id="unscheduledShelf"></div></div></section>
+    <section id="shotsView" class="view hidden"><div id="shotsShell" class="shots-shell"></div></section>
+    <footer class="app-footer"><span><span class="green-dot"></span>Made for the way you create.</span><span id="footerRight">Research → Structure → Publish</span></footer>
+  </main>
+</div>
+<div class="screen-warning"><span class="brand-mark"><svg><use href="#i-thread"/></svg></span><h1>Big ideas need a little room.</h1><p>Sam’s Canvas works on laptop and desktop screens.<br>Open this workspace on a screen at least 960px wide and 600px tall.</p></div>
+<div id="modalBackdrop" class="modal-backdrop hidden"><section id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></section></div>
+<div id="contextMenu" class="context-menu hidden"></div><div id="toast" class="toast" role="status"></div><input type="file" id="imageInput" accept="image/*" hidden><input type="file" id="importInput" accept="application/json,.json" hidden>
+<script src="./editor.js?v=15" defer></script>
+<script src="./gestures.js?v=15" defer></script>
+<script src="./studio.js?v=15" defer></script>
+<script src="./canvas-tools.js?v=15" defer></script>
+<script src="./projects.js?v=15" defer></script>
+<script src="./calendar.js?v=15" defer></script>
+<script src="./view-session.js?v=15" defer></script>
+<script src="./welcome.js?v=15" defer></script>
+<script src="./app.js?v=15" defer></script>
+</body></html>

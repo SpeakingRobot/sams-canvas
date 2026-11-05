@@ -1,0 +1,39 @@
+{
+  "name": "sams-canvas-creator-studio",
+  "version": "1.6.0",
+  "private": true,
+  "description": "A thoughtful content research, planning, and publishing workspace.",
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node --check dist/editor.js && node --check dist/gestures.js && node --check dist/studio.js && node --check dist/canvas-tools.js && node --check dist/projects.js && node --check dist/calendar.js && node --check dist/welcome.js && node --check dist/view-session.js && node --check dist/app.js && node --check dist/sw.js && node --check server.mjs",
+    "desktop": "electron desktop/main.cjs",
+    "desktop:build": "electron-builder --win nsis",
+    "test": "node studio.test.cjs"
+  },
+  "main": "desktop/main.cjs",
+  "build": {
+    "appId": "studio.threadline.app",
+    "productName": "Sam's Canvas",
+    "directories": {
+      "output": "release-1.6.0"
+    },
+    "files": [
+      "dist/**/*",
+      "desktop/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "dist/app.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0"
+  }
+}
