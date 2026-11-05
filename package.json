@@ -1,13 +1,13 @@
 {
   "name": "sams-canvas-creator-studio",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "private": true,
   "description": "A thoughtful content research, planning, and publishing workspace.",
   "scripts": {
     "start": "node server.mjs",
     "check": "node --check dist/editor.js && node --check dist/gestures.js && node --check dist/studio.js && node --check dist/canvas-tools.js && node --check dist/projects.js && node --check dist/calendar.js && node --check dist/welcome.js && node --check dist/view-session.js && node --check dist/app.js && node --check dist/sw.js && node --check server.mjs",
     "desktop": "electron desktop/main.cjs",
-    "desktop:build": "electron-builder --win nsis",
+    "desktop:build": "node --use-system-ca ./node_modules/electron-builder/cli.js --win nsis",
     "test": "node studio.test.cjs"
   },
   "main": "desktop/main.cjs",
@@ -15,7 +15,7 @@
     "appId": "studio.threadline.app",
     "productName": "Sam's Canvas",
     "directories": {
-      "output": "release-1.6.0"
+      "output": "release-1.7.0"
     },
     "files": [
       "dist/**/*",
@@ -34,6 +34,10 @@
   },
   "devDependencies": {
     "electron": "^45.2.3",
-    "electron-builder": "^26.18.0"
+    "electron-builder": "^26.18.0",
+    "esbuild": "^0.28.2"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.0"
   }
 }
