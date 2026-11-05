@@ -1,7 +1,11 @@
-# Sam's Canvas 1.7.0 — Testing preview
+# Sam's Canvas 1.8.0 — Testing preview
 
 A private testing build of Sam's Canvas — Creator Studio. Login is not required.
 
+- Seamless Supabase cloud integration with built-in database configuration.
+- Dedicated authentication modal supporting both single-use Email OTP codes and Email/Password login.
+- Automatic background cloud synchronization with session restoration on application launch.
+- Live sync status indicators in the user profile, workspace menu, and account avatar.
 - Pre-configured Supabase cloud connection setup with automatic credentials fallback.
 - Polished project previews, responsive wire interactions, and cursor movement smoothing.
 - A startup screen with floating notes and Enter; the project control and small app icon remain visible on every tab.
@@ -14,8 +18,7 @@ A private testing build of Sam's Canvas — Creator Studio. Login is not require
 - A digital publishing patchbay, larger day labels, and knife cutting in Content.
 - Custom pressing/pinching/gripping cursors, left-facing knife, electrical socket sparks, snapping cable recoil, and interaction sound effects.
 - Grid content calendar with Posted marks and drag-to-reschedule.
-- Optional Supabase setup is included for later.
 
-Download and run **Sam's Canvas Setup 1.7.0.exe** to install on Windows. The installer is unsigned. macOS packaging is planned for a later build.
+Download and run **Sam's Canvas Setup 1.8.0.exe** to install on Windows. The installer is unsigned. macOS packaging is planned for a later build.
 
 Work saves locally. Export a workspace backup from the avatar menu to move work between the web and desktop versions. The GitHub repository and this release are private.
