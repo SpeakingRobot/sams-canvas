@@ -62,10 +62,13 @@ let wireHandLast=null,wireHandRestTimer=null;
 function startWireHand(e,color){StudioSFX.play('grab');$('#wireDragHand')?.remove();clearTimeout(wireHandRestTimer);wireHandLast={x:e.clientX,y:e.clientY,time:performance.now(),angle:0};document.body.classList.add('wire-gripping');document.body.insertAdjacentHTML('beforeend',`<div id="wireDragHand" class="wire-drag-hand natural-grip" aria-hidden="true" style="--grip-color:${color||'var(--accent)'};--grip-scale:${Math.max(.65,Math.min(1,Math.sqrt(tab==='structure'?ContentCamera.zoom:zoom)))}">${CanvasEditor.handSVG()}</div>`);moveWireHand(e.clientX,e.clientY);const hand=$('#wireDragHand');hand.getBoundingClientRect();setTimeout(()=>{if(hand.isConnected&&!hand.classList.contains('releasing'))hand.classList.add('gripping')},20)}
 function moveWireHand(x,y){const hand=$('#wireDragHand');if(!hand||hand.classList.contains('releasing'))return;const now=performance.now(),last=wireHandLast||{x,y,time:now-16,angle:0},dt=Math.max(10,now-last.time),vx=(x-last.x)/dt,vy=(y-last.y)/dt,target=reduceMotion()?0:Math.max(-8,Math.min(8,vx*10-vy*4)),angle=last.angle+(target-last.angle)*.18;hand.style.translate=(x-8.5)+'px '+(y-17)+'px';hand.style.setProperty('--hand-tilt',angle+'deg');wireHandLast={x,y,time:now,angle};clearTimeout(wireHandRestTimer);wireHandRestTimer=setTimeout(()=>{if(hand.isConnected)hand.style.setProperty('--hand-tilt','0deg')},100)}
 function releaseWireHand(connected=false){const hand=$('#wireDragHand');document.body.classList.remove('wire-gripping');clearTimeout(wireHandRestTimer);if(!hand||hand.classList.contains('releasing'))return;hand.classList.remove('gripping');hand.classList.add('releasing');hand.style.setProperty('--hand-tilt','0deg');if(connected)hand.classList.add('connected');document.body.classList.add('wire-hand-releasing');setTimeout(()=>{hand.remove();if(!$('#wireDragHand'))document.body.classList.remove('wire-hand-releasing')},460)}
-let cloudConfig;try{cloudConfig=JSON.parse(localStorage.getItem('threadline.cloud.config')||'null')}catch{cloudConfig=null}
-if(!cloudConfig){try{fetch('./cloud-config.json').then(r=>r.ok?r.json():null).then(cfg=>{if(cfg&&!cloudConfig){cloudConfig=cfg;try{localStorage.setItem('threadline.cloud.config',JSON.stringify(cfg))}catch{}}}).catch(()=>{})}catch{}}
+const DEFAULT_CLOUD_CONFIG={url:'https://tfbkpgqzkgtrabgrvqlj.supabase.co',key:'sb_publishable_hwcDKXBbPzYiCiaG-mCGwg_1UW3BwkP',otpLength:8};
+let cloudConfig;try{cloudConfig=JSON.parse(localStorage.getItem('threadline.cloud.config')||'null')||DEFAULT_CLOUD_CONFIG}catch{cloudConfig=DEFAULT_CLOUD_CONFIG}
+try{if(!localStorage.getItem('threadline.cloud.config'))localStorage.setItem('threadline.cloud.config',JSON.stringify(cloudConfig))}catch{}
 let cloudSession;try{cloudSession=JSON.parse(localStorage.getItem('threadline.cloud.session')||'null')}catch{cloudSession=null}
 let cloudReady=false,cloudVersion=null,cloudBusy=false,cloudConflict=false;
+try{cloudVersion=localStorage.getItem('threadline.cloud.version')||null}catch{}
+function updateProfileUI(){const pBtn=$('#profileButton'),wBtn=$('#workspaceButton'),aBtn=$('#avatarButton'),email=cloudSession?.user?.email,initial=email?email[0].toUpperCase():'S';if(cloudSession&&email){if(pBtn)pBtn.innerHTML=`<span class="avatar">${initial}</span><span><strong>${escapeHTML(email.split('@')[0])}</strong><small>${cloudReady?'Cloud synced':'Connected'}</small></span><span class="online-dot" style="background:#22c55e"></span>`;if(wBtn){const s=wBtn.querySelector('small');if(s)s.textContent=cloudReady?'Cloud workspace':'Connected'}if(aBtn)aBtn.textContent=initial}else{if(pBtn)pBtn.innerHTML=`<span class="avatar">S</span><span><strong>Your creative space</strong><small>Saved on this device</small></span><span class="online-dot"></span>`;if(wBtn){const s=wBtn.querySelector('small');if(s)s.textContent='Personal workspace'}if(aBtn)aBtn.textContent='S'}}
 const board=()=>state.boards.find(b=>b.id===state.activeBoard)||state.boards[0];
 function validWorkspace(s){
  if(!s||s.version!==1||!Array.isArray(s.boards)||!s.boards.length||s.boards.length>200||!Array.isArray(s.topics)||s.topics.length>1000)return false;
@@ -247,12 +250,195 @@ $('#importInput').onchange=async e=>{const file=e.target.files[0];e.target.value
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e});window.addEventListener('resize',()=>{updateTabs();if(tab==='structure')renderStructure();else if(tab==='whiteboard')fitBoard()});
 window.addEventListener('beforeunload',()=>{ViewSession.write();if(saveTimer){try{localStorage.setItem(STORE,JSON.stringify(state))}catch{}}});
 // Optional Supabase sync. No account is required to use the testing workspace.
-function cloudSettings(){showModal(`<div class="modal-header"><div><div class="eyebrow">YOUR STUDIO, WHEREVER YOU ARE</div><h2 id="modalTitle">Local now. Connected when ready.</h2><p>The testing workspace opens freely. Connect your own Supabase project when you’re ready to sync accounts.</p></div>${closeButton()}</div><form id="cloudConfigForm"><label class="field"><span>Supabase project URL</span><input type="url" id="supabaseURL" placeholder="https://your-project.supabase.co" value="${escapeHTML(cloudConfig?.url||'')}" required></label><label class="field"><span>Public publishable key</span><input id="supabaseKey" placeholder="sb_publishable_…" value="${escapeHTML(cloudConfig?.key||'')}" required></label><p class="field-help">Run the included supabase/schema.sql in your project first. Use a publishable key or legacy anon key. Never use a secret or service-role key. This configuration stays on your device.</p><div class="modal-actions"><button class="secondary-btn" type="button" data-close>Keep testing locally</button><button class="primary-btn">${icon('check')}Save connection</button></div></form><div class="help-section">${cloudSession?`<strong>Signed in as ${escapeHTML(cloudSession.user?.email||'your account')}</strong><br><span id="cloudMessage">${cloudReady?'Sync ready.':'Choose a workspace to begin syncing.'}</span><br><button class="text-btn" id="syncNow">${icon('connect')}Sync workspace</button><button class="text-btn" id="signOut">Sign out</button>`:`<strong>Login is optional.</strong><br>When your database is ready, sign in with an email code to sync this workspace.<form id="cloudLoginForm"><label class="field" style="margin-top:12px"><span>Email address</span><input type="email" id="cloudEmail" required placeholder="you@yourstudio.com"></label><button class="secondary-btn">Send sign-in code</button></form>`}</div>`,true);$('#cloudConfigForm').onsubmit=e=>{e.preventDefault();let url;try{const u=new URL($('#supabaseURL').value);if(u.protocol!=='https:'||!u.hostname.endsWith('.supabase.co')||u.pathname!=='/')throw Error();url=u.origin}catch{return toast('Use your HTTPS project URL from Supabase, ending in .supabase.co')};const key=$('#supabaseKey').value.trim();let secret=key.startsWith('sb_secret_');try{const p=JSON.parse(atob(key.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));secret=secret||p.role==='service_role'}catch{}if(secret)return toast('Use a public publishable or anon key. Secret keys do not belong in this app.');if(!key.startsWith('sb_publishable_')&&!key.startsWith('eyJ'))return toast('Enter your public Supabase publishable or legacy anon key');const changed=cloudConfig?.url!==url;cloudConfig={url,key};localStorage.setItem('threadline.cloud.config',JSON.stringify(cloudConfig));if(changed){cloudSession=null;cloudReady=false;localStorage.removeItem('threadline.cloud.session')}toast('Connection saved. Local testing stays open.');cloudSettings()};if($('#cloudLoginForm'))$('#cloudLoginForm').onsubmit=async e=>{e.preventDefault();if(!cloudConfig)return toast('Save your project URL and public key first');const email=$('#cloudEmail').value.trim(),button=$('#cloudLoginForm button');button.disabled=true;button.textContent='Sending…';try{await sb('/auth/v1/otp',{method:'POST',body:{email,create_user:true}});otpDialog(email)}catch(err){toast(err.message);button.disabled=false;button.textContent='Send sign-in code'}};if($('#syncNow'))$('#syncNow').onclick=()=>cloudReady?syncCloud(true):startCloud();if($('#signOut'))$('#signOut').onclick=async()=>{try{await sb('/auth/v1/logout',{method:'POST'},true)}catch{}cloudSession=null;cloudReady=false;cloudVersion=null;localStorage.removeItem('threadline.cloud.session');cloudSettings();toast('Signed out. Your local workspace is still here.')}}
+function cloudSettings(){
+  const hostname=cloudConfig?.url?new URL(cloudConfig.url).hostname:'Supabase';
+  const lastEmail=localStorage.getItem('threadline.last.email')||'';
+  showModal(`<div class="modal-header">
+    <div>
+      <div class="eyebrow">YOUR STUDIO, WHEREVER YOU ARE</div>
+      <h2 id="modalTitle">${cloudSession?'Studio cloud account':'Connect to Creator Studio'}</h2>
+      <p>${cloudSession?'Your creative space auto-syncs securely with Supabase.':'Sign in to sync your research boards, shot lists, and calendar across devices.'}</p>
+    </div>
+    ${closeButton()}
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:9px;margin-bottom:18px">
+    <div style="display:flex;align-items:center;gap:9px">
+      <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e88"></span>
+      <span style="font-size:11px;font-weight:600;color:var(--text-2)">Supabase database</span>
+      <code style="font-size:10px;color:var(--text-3);background:var(--surface-soft);padding:2px 6px;border-radius:4px">${escapeHTML(hostname)}</code>
+    </div>
+    <button class="text-btn" id="toggleDbConfig" type="button" style="font-size:10px;padding:4px 8px">${icon('more')}Database settings</button>
+  </div>
+  <div id="dbConfigSection" class="hidden" style="margin-bottom:18px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:9px">
+    <form id="cloudConfigForm">
+      <label class="field"><span>Supabase project URL</span><input type="url" id="supabaseURL" placeholder="https://your-project.supabase.co" value="${escapeHTML(cloudConfig?.url||'')}" required></label>
+      <label class="field" style="margin-top:10px"><span>Public publishable key</span><input id="supabaseKey" placeholder="sb_publishable_…" value="${escapeHTML(cloudConfig?.key||'')}" required></label>
+      <p class="field-help" style="margin-top:6px">Run <code>supabase/schema.sql</code> in your project first. Use a publishable or anon key.</p>
+      <div class="modal-actions" style="margin-top:12px"><button class="primary-btn" style="width:100%">${icon('check')}Save custom connection</button></div>
+    </form>
+  </div>
+  ${cloudSession?`
+    <div class="help-section" style="border-top:1px solid var(--border);padding-top:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div style="font-size:9px;letter-spacing:1.2px;color:var(--text-3);font-weight:600">SIGNED IN AS</div>
+          <strong style="font-size:14px;color:var(--text)">${escapeHTML(cloudSession.user?.email||'your account')}</strong>
+        </div>
+        <span id="cloudMessage" style="font-size:11px;color:${cloudReady?'#22c55e':'var(--text-3)'};display:flex;align-items:center;gap:6px">
+          <span style="width:6px;height:6px;border-radius:50%;background:${cloudReady?'#22c55e':'#f59e0b'}"></span>
+          ${cloudReady?'Sync ready':'Sync pending'}
+        </span>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="primary-btn" id="syncNow" style="flex:1">${icon('connect')}Sync workspace now</button>
+        <button class="secondary-btn" id="signOut">${icon('close')}Sign out</button>
+      </div>
+    </div>
+  `:`
+    <div class="auth-section">
+      <div class="shots-mode-tabs" style="margin-bottom:14px">
+        <button type="button" class="selected" id="tabOtp">${icon('thread')}Email code (OTP)</button>
+        <button type="button" id="tabPw">${icon('connect')}Password</button>
+      </div>
+      <div id="panelOtp">
+        <form id="cloudLoginForm">
+          <label class="field"><span>Email address</span><input type="email" id="cloudEmail" required placeholder="you@yourstudio.com" value="${escapeHTML(lastEmail)}"></label>
+          <p class="field-help" style="margin:8px 0 16px">We’ll email a single-use sign-in code to this address. No password required.</p>
+          <div class="modal-actions">
+            <button class="secondary-btn" type="button" data-close>Keep testing locally</button>
+            <button class="primary-btn" id="btnSendOtp">${icon('play')}Send sign-in code</button>
+          </div>
+        </form>
+      </div>
+      <div id="panelPw" class="hidden">
+        <form id="passwordLoginForm">
+          <label class="field"><span>Email address</span><input type="email" id="pwEmail" required placeholder="you@yourstudio.com" value="${escapeHTML(lastEmail)}"></label>
+          <label class="field" style="margin-top:10px"><span>Password</span><input type="password" id="pwPassword" required minlength="6" placeholder="Your password"></label>
+          <div class="modal-actions" style="margin-top:16px;display:flex;gap:10px">
+            <button class="secondary-btn" type="button" id="btnSignUpPw">Create account</button>
+            <button class="primary-btn" id="btnSignInPw">${icon('check')}Sign in</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `}`,true);
+  $('#toggleDbConfig')?.addEventListener('click',()=>$('#dbConfigSection')?.classList.toggle('hidden'));
+  $('#tabOtp')?.addEventListener('click',()=>{
+    $('#tabOtp')?.classList.add('selected');$('#tabPw')?.classList.remove('selected');
+    $('#panelOtp')?.classList.remove('hidden');$('#panelPw')?.classList.add('hidden');
+  });
+  $('#tabPw')?.addEventListener('click',()=>{
+    $('#tabPw')?.classList.add('selected');$('#tabOtp')?.classList.remove('selected');
+    $('#panelPw')?.classList.remove('hidden');$('#panelOtp')?.classList.add('hidden');
+  });
+  if($('#cloudConfigForm'))$('#cloudConfigForm').onsubmit=e=>{
+    e.preventDefault();let url;
+    try{
+      const u=new URL($('#supabaseURL').value);
+      if(u.protocol!=='https:'||!u.hostname.endsWith('.supabase.co')||u.pathname!=='/')throw Error();
+      url=u.origin;
+    }catch{return toast('Use your HTTPS project URL from Supabase, ending in .supabase.co')}
+    const key=$('#supabaseKey').value.trim();let secret=key.startsWith('sb_secret_');
+    try{const p=JSON.parse(atob(key.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));secret=secret||p.role==='service_role'}catch{}
+    if(secret)return toast('Use a public publishable or anon key. Secret keys do not belong in this app.');
+    if(!key.startsWith('sb_publishable_')&&!key.startsWith('eyJ'))return toast('Enter your public Supabase publishable or legacy anon key');
+    const changed=cloudConfig?.url!==url||cloudConfig?.key!==key;
+    cloudConfig={url,key};localStorage.setItem('threadline.cloud.config',JSON.stringify(cloudConfig));
+    if(changed){cloudSession=null;cloudReady=false;localStorage.removeItem('threadline.cloud.session');localStorage.removeItem('threadline.cloud.version');updateProfileUI()}
+    toast('Connection saved. Database updated.');cloudSettings();
+  };
+  if($('#cloudLoginForm'))$('#cloudLoginForm').onsubmit=async e=>{
+    e.preventDefault();if(!cloudConfig)return toast('Save your project URL and public key first');
+    const email=$('#cloudEmail').value.trim(),button=$('#btnSendOtp');
+    button.disabled=true;button.textContent='Sending…';
+    try{
+      try{localStorage.setItem('threadline.last.email',email)}catch{}
+      await sb('/auth/v1/otp',{method:'POST',body:{email,create_user:true}});
+      otpDialog(email);
+    }catch(err){toast(err.message);button.disabled=false;button.innerHTML=`${icon('play')}Send sign-in code`}
+  };
+  if($('#passwordLoginForm'))$('#passwordLoginForm').onsubmit=async e=>{
+    e.preventDefault();if(!cloudConfig)return toast('Save your project URL and public key first');
+    const email=$('#pwEmail').value.trim(),password=$('#pwPassword').value,button=$('#btnSignInPw');
+    button.disabled=true;button.textContent='Signing in…';
+    try{
+      try{localStorage.setItem('threadline.last.email',email)}catch{}
+      const result=await sb('/auth/v1/token?grant_type=password',{method:'POST',body:{email,password}});
+      cloudSession={...result,expires_at:Date.now()/1000+result.expires_in};
+      localStorage.setItem('threadline.cloud.session',JSON.stringify(cloudSession));
+      updateProfileUI();await startCloud();toast('Signed in as '+(cloudSession.user?.email||email));
+    }catch(err){toast(err.message);button.disabled=false;button.innerHTML=`${icon('check')}Sign in`}
+  };
+  if($('#btnSignUpPw'))$('#btnSignUpPw').onclick=async()=>{
+    const email=$('#pwEmail').value.trim(),password=$('#pwPassword').value,button=$('#btnSignUpPw');
+    if(!email||!password||password.length<6)return toast('Enter email and password with at least 6 characters');
+    button.disabled=true;button.textContent='Creating…';
+    try{
+      try{localStorage.setItem('threadline.last.email',email)}catch{}
+      const result=await sb('/auth/v1/signup',{method:'POST',body:{email,password}});
+      if(result?.session){
+        cloudSession={...result.session,expires_at:Date.now()/1000+result.session.expires_in};
+        localStorage.setItem('threadline.cloud.session',JSON.stringify(cloudSession));
+        updateProfileUI();await startCloud();toast('Account created and signed in as '+(cloudSession.user?.email||email));
+      }else{toast('Account created! Check your email to confirm or sign in with your code.');closeModal()}
+    }catch(err){toast(err.message);button.disabled=false;button.textContent='Create account'}
+  };
+  if($('#syncNow'))$('#syncNow').onclick=()=>cloudReady?syncCloud(true):startCloud();
+  if($('#signOut'))$('#signOut').onclick=async()=>{
+    try{await sb('/auth/v1/logout',{method:'POST'},true)}catch{}
+    cloudSession=null;cloudReady=false;cloudVersion=null;
+    localStorage.removeItem('threadline.cloud.session');localStorage.removeItem('threadline.cloud.version');
+    updateProfileUI();cloudSettings();toast('Signed out. Your local workspace is still here.');
+  };
+}
 async function sb(path,options={},auth=false){if(!cloudConfig)throw Error('Save a Supabase connection first');if(auth&&cloudSession&&cloudSession.expires_at<Date.now()/1000+60)await refreshSession();const headers={apikey:cloudConfig.key,'Content-Type':'application/json',...(auth&&cloudSession?{Authorization:'Bearer '+cloudSession.access_token}:{}),...options.headers};const response=await fetch(cloudConfig.url+path,{...options,headers,body:options.body?JSON.stringify(options.body):undefined,signal:AbortSignal.timeout(18000)});if(!response.ok){let data;try{data=await response.json()}catch{}throw Error(data?.msg||data?.message||data?.error_description||'Supabase could not complete the request ('+response.status+').')}return response.status===204?null:response.text().then(t=>t?JSON.parse(t):null)}
 async function refreshSession(){if(!cloudSession?.refresh_token)throw Error('Sign in again to continue syncing');const result=await sb('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:cloudSession.refresh_token}});cloudSession={...result,expires_at:Date.now()/1000+result.expires_in};localStorage.setItem('threadline.cloud.session',JSON.stringify(cloudSession))}
-function otpDialog(email){showModal(`<div class="modal-header"><div><div class="eyebrow">CHECK YOUR INBOX</div><h2 id="modalTitle">Your studio is one code away.</h2><p>Enter the sign-in code sent to ${escapeHTML(email)}. Supabase’s email template must include the Token variable, as described in the setup guide.</p></div>${closeButton()}</div><form id="otpForm"><label class="field"><span>Email sign-in code</span><input id="otpCode" inputmode="numeric" autocomplete="one-time-code" minlength="6" maxlength="10" required placeholder="Your code"></label><div class="modal-actions"><button type="button" class="secondary-btn" data-close>Keep testing locally</button><button class="primary-btn">Sign in</button></div></form>`);$('#otpForm').onsubmit=async e=>{e.preventDefault();const button=$('#otpForm .primary-btn');button.disabled=true;try{const result=await sb('/auth/v1/verify',{method:'POST',body:{email,token:$('#otpCode').value.trim(),type:'email'}});cloudSession={...result,expires_at:Date.now()/1000+result.expires_in};localStorage.setItem('threadline.cloud.session',JSON.stringify(cloudSession));await startCloud()}catch(err){toast(err.message);button.disabled=false}}}
-async function startCloud(){if(!cloudSession)return cloudSettings();try{const rows=await sb('/rest/v1/creator_workspaces?select=payload,revision,updated_at&user_id=eq.'+encodeURIComponent(cloudSession.user.id),{},true);const remote=rows?.[0];if(remote){if(!validWorkspace(remote.payload))throw Error('The cloud workspace could not be read. Export a local backup before continuing.');showModal(`<div class="modal-header"><div><div class="eyebrow">TWO PLACES, ONE CREATIVE SPACE</div><h2 id="modalTitle">Which workspace should we keep?</h2><p>Your cloud account already has a workspace. Pick the starting point for syncing. Export a backup first if you’d like to keep a separate copy.</p></div>${closeButton()}</div><div class="board-library"><button class="library-card" id="useCloud"><strong>Open cloud workspace</strong><small>${remote.payload.boards.length} boards · ${remote.payload.topics.length} topics</small></button><button class="library-card" id="useLocal"><strong>Upload this device’s workspace</strong><small>${state.boards.length} boards · ${state.topics.length} topics</small></button></div><div class="modal-actions"><button class="secondary-btn" id="cloudBackup">Export device backup</button><button class="secondary-btn" data-close>Decide later</button></div>`);$('#cloudBackup').onclick=exportBackup;$('#useCloud').onclick=()=>{checkpoint();state=clone(remote.payload);cloudVersion=remote.revision;cloudReady=true;cloudConflict=false;closeModal();renderAll();fitBoard();try{localStorage.setItem(STORE,JSON.stringify(state))}catch{}toast('Cloud workspace opened. Sync is ready.')};$('#useLocal').onclick=async()=>{cloudVersion=remote.revision;cloudReady=true;cloudConflict=false;closeModal();await syncCloud(true)}}else{cloudVersion=null;cloudReady=true;cloudConflict=false;await syncCloud(true);closeModal()}}catch(err){cloudReady=false;toast(err.message)}}
-async function syncCloud(manual=false){if(!cloudReady||!cloudSession||cloudBusy||cloudConflict)return;cloudBusy=true;const revision=uid(),snapshot=clone(state),version=cloudVersion;try{let rows;if(version===null){rows=await sb('/rest/v1/creator_workspaces',{method:'POST',headers:{Prefer:'return=representation'},body:{user_id:cloudSession.user.id,payload:snapshot,revision}},true)}else{rows=await sb('/rest/v1/creator_workspaces?user_id=eq.'+encodeURIComponent(cloudSession.user.id)+'&revision=eq.'+encodeURIComponent(version),{method:'PATCH',headers:{Prefer:'return=representation'},body:{payload:snapshot,revision}},true)}if(!rows?.length){cloudConflict=true;cloudReady=false;throw Error('Cloud work changed on another device. Open My studio → Sync workspace to choose which version to keep.')}cloudVersion=revision;if(manual)toast('Workspace synced. Your ideas can travel now.');if(state.updatedAt!==snapshot.updatedAt){clearTimeout(cloudTimer);cloudTimer=setTimeout(()=>syncCloud(),1000)}}catch(err){if(manual||cloudConflict)toast(err.message);else{$('#saveState').textContent='Saved locally · cloud sync needs attention';cloudReady=false}}finally{cloudBusy=false}}
+function otpDialog(email){
+  showModal(`<div class="modal-header"><div><div class="eyebrow">CHECK YOUR INBOX</div><h2 id="modalTitle">Your studio is one code away.</h2><p>Enter the verification code sent to <strong>${escapeHTML(email)}</strong>.</p></div>${closeButton()}</div><form id="otpForm"><label class="field"><span>Email sign-in code</span><input id="otpCode" inputmode="numeric" autocomplete="one-time-code" minlength="6" maxlength="10" required placeholder="Enter code from email" autofocus></label><div class="modal-actions"><button type="button" class="secondary-btn" data-close>Keep testing locally</button><button class="primary-btn" id="btnVerifyOtp">Sign in</button></div></form>`);
+  $('#otpForm').onsubmit=async e=>{
+    e.preventDefault();const button=$('#btnVerifyOtp'),token=$('#otpCode').value.trim();
+    button.disabled=true;button.textContent='Verifying…';
+    try{
+      let result;
+      try{result=await sb('/auth/v1/verify',{method:'POST',body:{email,token,type:'email'}})}catch(err1){try{result=await sb('/auth/v1/verify',{method:'POST',body:{email,token,type:'signup'}})}catch{throw err1}}
+      cloudSession={...result,expires_at:Date.now()/1000+result.expires_in};
+      localStorage.setItem('threadline.cloud.session',JSON.stringify(cloudSession));
+      updateProfileUI();await startCloud();toast('Welcome! Signed in as '+(cloudSession.user?.email||email));
+    }catch(err){toast(err.message);button.disabled=false;button.textContent='Sign in'}
+  };
+}
+async function startCloud(silent=false){
+  if(!cloudSession)return silent?null:cloudSettings();
+  try{
+    const rows=await sb('/rest/v1/creator_workspaces?select=payload,revision,updated_at&user_id=eq.'+encodeURIComponent(cloudSession.user.id),{},true);
+    const remote=rows?.[0];
+    if(remote){
+      if(!validWorkspace(remote.payload))throw Error('The cloud workspace could not be read. Export a local backup before continuing.');
+      const localVersion=localStorage.getItem('threadline.cloud.version');
+      if(silent&&(remote.revision===localVersion||cloudVersion===remote.revision)){cloudVersion=remote.revision;cloudReady=true;cloudConflict=false;updateProfileUI();return}
+      showModal(`<div class="modal-header"><div><div class="eyebrow">TWO PLACES, ONE CREATIVE SPACE</div><h2 id="modalTitle">Which workspace should we keep?</h2><p>Your cloud account already has a workspace. Pick the starting point for syncing. Export a backup first if you’d like to keep a separate copy.</p></div>${closeButton()}</div><div class="board-library"><button class="library-card" id="useCloud"><strong>Open cloud workspace</strong><small>${remote.payload.boards.length} boards · ${remote.payload.topics.length} topics</small></button><button class="library-card" id="useLocal"><strong>Upload this device’s workspace</strong><small>${state.boards.length} boards · ${state.topics.length} topics</small></button></div><div class="modal-actions"><button class="secondary-btn" id="cloudBackup">Export device backup</button><button class="secondary-btn" data-close>Decide later</button></div>`);
+      $('#cloudBackup').onclick=exportBackup;
+      $('#useCloud').onclick=()=>{checkpoint();state=clone(remote.payload);cloudVersion=remote.revision;cloudReady=true;cloudConflict=false;try{localStorage.setItem('threadline.cloud.version',cloudVersion)}catch{}closeModal();renderAll();fitBoard();try{localStorage.setItem(STORE,JSON.stringify(state))}catch{}updateProfileUI();toast('Cloud workspace opened. Sync is ready.')};
+      $('#useLocal').onclick=async()=>{cloudVersion=remote.revision;cloudReady=true;cloudConflict=false;try{localStorage.setItem('threadline.cloud.version',cloudVersion)}catch{}closeModal();await syncCloud(true);updateProfileUI()};
+    }else{cloudVersion=null;cloudReady=true;cloudConflict=false;await syncCloud(true);if(!silent)closeModal();updateProfileUI()}
+  }catch(err){cloudReady=false;updateProfileUI();if(!silent)toast(err.message)}
+}
+async function syncCloud(manual=false){
+  if(!cloudReady||!cloudSession||cloudBusy||cloudConflict)return;
+  cloudBusy=true;const revision=uid(),snapshot=clone(state),version=cloudVersion;
+  try{
+    let rows;
+    if(version===null){
+      rows=await sb('/rest/v1/creator_workspaces',{method:'POST',headers:{Prefer:'return=representation'},body:{user_id:cloudSession.user.id,payload:snapshot,revision}},true);
+    }else{
+      rows=await sb('/rest/v1/creator_workspaces?user_id=eq.'+encodeURIComponent(cloudSession.user.id)+'&revision=eq.'+encodeURIComponent(version),{method:'PATCH',headers:{Prefer:'return=representation'},body:{payload:snapshot,revision}},true);
+    }
+    if(!rows?.length){cloudConflict=true;cloudReady=false;updateProfileUI();throw Error('Cloud work changed on another device. Open My studio → Sync workspace to choose which version to keep.')}
+    cloudVersion=revision;try{localStorage.setItem('threadline.cloud.version',revision)}catch{}updateProfileUI();
+    if(manual)toast('Workspace synced. Your ideas can travel now.');
+    if(state.updatedAt!==snapshot.updatedAt){clearTimeout(cloudTimer);cloudTimer=setTimeout(()=>syncCloud(),1000)}
+  }catch(err){if(manual||cloudConflict)toast(err.message);else{$('#saveState').textContent='Saved locally · cloud sync needs attention';cloudReady=false;updateProfileUI()}}finally{cloudBusy=false}
+}
 window.addEventListener('online',()=>{if(cloudReady)syncCloud()});
 function sequences(){if(!Array.isArray(state.sequences))state.sequences=[];return state.sequences}
 function activeSequence(contentId){const content=state.topics.find(t=>t.id===contentId);const seq=content?CanvasEditor.sequenceForBoard(content.boardId):null;return seq&&!seq.archived?seq:undefined}
@@ -317,4 +503,4 @@ CanvasSelection.init();
 CanvasEditor.init();if(restoredView.contentCamera)ContentCamera.zoom=restoredView.contentCamera.z;ContentCamera.init();CalendarUI.init();CreativeStudio.init();
 setTheme(document.documentElement.dataset.theme==='light'?'light':'dark');
 if(['localhost','127.0.0.1'].includes(location.hostname)){let styleVersion=null;setInterval(async()=>{if(document.hidden)return;try{const r=await fetch('/__version',{cache:'no-store'});if(!r.ok)return;const v=await r.json();if(styleVersion!==v.css){styleVersion=v.css;const link=$('#appStyles');if(link)link.href='./style.css?v='+v.css}}catch{}},2500)}
-renderAll();Welcome.init();document.addEventListener('scroll',()=>ViewSession.remember(),true);requestAnimationFrame(()=>{if(tab==='whiteboard'){if(restoredView.camera)updateTransform();else fitBoard()}ViewSession.restoreScroll(restoredView.scroll);ViewSession.restoring=false;ViewSession.write();updateTabs()});if(document.fonts)document.fonts.ready.then(()=>{if(tab==='whiteboard'&&!restoredView.camera)fitBoard();updateTabs()});if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
+renderAll();updateProfileUI();if(cloudSession&&cloudConfig){startCloud(true);}Welcome.init();document.addEventListener('scroll',()=>ViewSession.remember(),true);requestAnimationFrame(()=>{if(tab==='whiteboard'){if(restoredView.camera)updateTransform();else fitBoard()}ViewSession.restoreScroll(restoredView.scroll);ViewSession.restoring=false;ViewSession.write();updateTabs()});if(document.fonts)document.fonts.ready.then(()=>{if(tab==='whiteboard'&&!restoredView.camera)fitBoard();updateTabs()});if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
