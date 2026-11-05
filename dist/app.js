@@ -66,6 +66,7 @@ const DEFAULT_CLOUD_CONFIG={url:'https://tfbkpgqzkgtrabgrvqlj.supabase.co',key:'
 let cloudConfig;try{cloudConfig=JSON.parse(localStorage.getItem('threadline.cloud.config')||'null')||DEFAULT_CLOUD_CONFIG}catch{cloudConfig=DEFAULT_CLOUD_CONFIG}
 try{if(!localStorage.getItem('threadline.cloud.config'))localStorage.setItem('threadline.cloud.config',JSON.stringify(cloudConfig))}catch{}
 let cloudSession;try{cloudSession=JSON.parse(localStorage.getItem('threadline.cloud.session')||'null')}catch{cloudSession=null}
+window.cloudSession=cloudSession;
 let cloudReady=false,cloudVersion=null,cloudBusy=false,cloudConflict=false;
 try{cloudVersion=localStorage.getItem('threadline.cloud.version')||null}catch{}
 function updateProfileUI(){const pBtn=$('#profileButton'),wBtn=$('#workspaceButton'),aBtn=$('#avatarButton'),email=cloudSession?.user?.email,initial=email?email[0].toUpperCase():'S';if(cloudSession&&email){if(pBtn)pBtn.innerHTML=`<span class="avatar">${initial}</span><span><strong>${escapeHTML(email.split('@')[0])}</strong><small>${cloudReady?'Cloud synced':'Connected'}</small></span><span class="online-dot" style="background:#22c55e"></span>`;if(wBtn){const s=wBtn.querySelector('small');if(s)s.textContent=cloudReady?'Cloud workspace':'Connected'}if(aBtn)aBtn.textContent=initial}else{if(pBtn)pBtn.innerHTML=`<span class="avatar">S</span><span><strong>Your creative space</strong><small>Saved on this device</small></span><span class="online-dot"></span>`;if(wBtn){const s=wBtn.querySelector('small');if(s)s.textContent='Personal workspace'}if(aBtn)aBtn.textContent='S'}}
@@ -364,7 +365,7 @@ function cloudSettings(){
     try{
       try{localStorage.setItem('threadline.last.email',email)}catch{}
       const result=await sb('/auth/v1/token?grant_type=password',{method:'POST',body:{email,password}});
-      cloudSession={...result,expires_at:Date.now()/1000+result.expires_in};
+      cloudSession={...result,expires_at:Date.now()/1000+result.expires_in};window.cloudSession=cloudSession;
       localStorage.setItem('threadline.cloud.session',JSON.stringify(cloudSession));
       updateProfileUI();await startCloud();toast('Signed in as '+(cloudSession.user?.email||email));
     }catch(err){toast(err.message);button.disabled=false;button.innerHTML=`${icon('check')}Sign in`}
@@ -386,12 +387,14 @@ function cloudSettings(){
   if($('#syncNow'))$('#syncNow').onclick=()=>cloudReady?syncCloud(true):startCloud();
   if($('#signOut'))$('#signOut').onclick=async()=>{
     try{await sb('/auth/v1/logout',{method:'POST'},true)}catch{}
-    cloudSession=null;cloudReady=false;cloudVersion=null;
+    cloudSession=null;cloudReady=false;cloudVersion=null;window.cloudSession=null;
     localStorage.removeItem('threadline.cloud.session');localStorage.removeItem('threadline.cloud.version');
     updateProfileUI();cloudSettings();toast('Signed out. Your local workspace is still here.');
+    if(typeof Welcome!=='undefined'&&Welcome.render)Welcome.render();
   };
 }
 async function sb(path,options={},auth=false){if(!cloudConfig)throw Error('Save a Supabase connection first');if(auth&&cloudSession&&cloudSession.expires_at<Date.now()/1000+60)await refreshSession();const headers={apikey:cloudConfig.key,'Content-Type':'application/json',...(auth&&cloudSession?{Authorization:'Bearer '+cloudSession.access_token}:{}),...options.headers};const response=await fetch(cloudConfig.url+path,{...options,headers,body:options.body?JSON.stringify(options.body):undefined,signal:AbortSignal.timeout(18000)});if(!response.ok){let data;try{data=await response.json()}catch{}throw Error(data?.msg||data?.message||data?.error_description||'Supabase could not complete the request ('+response.status+').')}return response.status===204?null:response.text().then(t=>t?JSON.parse(t):null)}
+window.sb=sb;window.startCloud=startCloud;window.updateProfileUI=updateProfileUI;
 async function refreshSession(){if(!cloudSession?.refresh_token)throw Error('Sign in again to continue syncing');const result=await sb('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:cloudSession.refresh_token}});cloudSession={...result,expires_at:Date.now()/1000+result.expires_in};localStorage.setItem('threadline.cloud.session',JSON.stringify(cloudSession))}
 function otpDialog(email){
   showModal(`<div class="modal-header"><div><div class="eyebrow">CHECK YOUR INBOX</div><h2 id="modalTitle">Your studio is one code away.</h2><p>Enter the verification code sent to <strong>${escapeHTML(email)}</strong>.</p></div>${closeButton()}</div><form id="otpForm"><label class="field"><span>Email sign-in code</span><input id="otpCode" inputmode="numeric" autocomplete="one-time-code" minlength="6" maxlength="10" required placeholder="Enter code from email" autofocus></label><div class="modal-actions"><button type="button" class="secondary-btn" data-close>Keep testing locally</button><button class="primary-btn" id="btnVerifyOtp">Sign in</button></div></form>`);
@@ -401,7 +404,7 @@ function otpDialog(email){
     try{
       let result;
       try{result=await sb('/auth/v1/verify',{method:'POST',body:{email,token,type:'email'}})}catch(err1){try{result=await sb('/auth/v1/verify',{method:'POST',body:{email,token,type:'signup'}})}catch{throw err1}}
-      cloudSession={...result,expires_at:Date.now()/1000+result.expires_in};
+      cloudSession={...result,expires_at:Date.now()/1000+result.expires_in};window.cloudSession=cloudSession;
       localStorage.setItem('threadline.cloud.session',JSON.stringify(cloudSession));
       updateProfileUI();await startCloud();toast('Welcome! Signed in as '+(cloudSession.user?.email||email));
     }catch(err){toast(err.message);button.disabled=false;button.textContent='Sign in'}

@@ -147,3 +147,22 @@ html[data-welcome=open] #app{visibility:hidden}.welcome-screen{position:fixed;in
 .wire-drag-hand{left:0;top:0;will-change:translate;contain:layout style}
 
 .project-grid{grid-auto-rows:minmax(216px,auto);align-content:start}.project-tile{min-height:216px;contain-intrinsic-size:auto 216px}.project-open{height:100%}
+
+/* Sam's Canvas Custom Logo & Welcome Auth */
+.welcome-brand-logo{width:88px;height:88px;border-radius:20px;box-shadow:0 12px 35px rgba(0,0,0,0.5);margin:0 auto 16px;display:block;object-fit:cover;border:1px solid rgba(255,255,255,0.12)}
+.brand-logo-img{width:26px;height:26px;border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle;border:1px solid rgba(255,255,255,0.12);display:inline-block}
+.welcome-auth-box{width:100%;max-width:340px;margin:20px auto 0;text-align:left}
+.welcome-auth-form{display:flex;flex-direction:column;gap:10px}
+.welcome-auth-label{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-3);display:block;margin-bottom:2px}
+.welcome-input{width:100%;height:42px;padding:0 14px;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s}
+.welcome-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.welcome-btn-full{width:100%;height:42px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;border:1px solid rgba(255,255,255,0.18);border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s,translate .15s,filter .15s}
+.welcome-btn-full:hover{filter:brightness(1.08);translate:0 -1px}
+.welcome-btn-full:disabled{opacity:0.6;cursor:not-allowed;translate:none}
+.welcome-auth-links{display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:11px}
+.welcome-auth-link{color:var(--text-3);text-decoration:underline;cursor:pointer;background:none;border:none;padding:0;font-size:11px;font-family:inherit}
+.welcome-auth-link:hover{color:var(--text)}
+.welcome-auth-status{margin-top:10px;font-size:11px;color:var(--accent);text-align:center;min-height:16px}
+.welcome-signed-box{margin-top:20px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.welcome-user-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;background:var(--surface);border:1px solid var(--border);font-size:12px;color:var(--text-2)}
+.welcome-user-pill .green-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block}

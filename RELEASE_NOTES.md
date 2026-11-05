@@ -1,24 +1,23 @@
-# Sam's Canvas 1.8.0 — Testing preview
+# Sam's Canvas 1.9.0 — Testing preview
 
-A private testing build of Sam's Canvas — Creator Studio. Login is not required.
+A private testing build of Sam's Canvas — Creator Studio featuring the new custom typography logo and a streamlined startup authentication gate.
 
-- Seamless Supabase cloud integration with built-in database configuration.
-- Dedicated authentication modal supporting both single-use Email OTP codes and Email/Password login.
-- Automatic background cloud synchronization with session restoration on application launch.
-- Live sync status indicators in the user profile, workspace menu, and account avatar.
-- Pre-configured Supabase cloud connection setup with automatic credentials fallback.
-- Polished project previews, responsive wire interactions, and cursor movement smoothing.
-- A startup screen with floating notes and Enter; the project control and small app icon remain visible on every tab.
-- Faster card dragging and page changes, responsive card resizing, and matching selection corners.
-- Content first; one project corresponds to one content item. Double-click content to open its whiteboard.
-- Refresh restores the current tab, project, shot history, month, and canvas viewports.
-- Film-style shot cards and a matching production page with recording stamps.
-- A digital clock with a segmented LCD and physical controls.
-- A six-channel atmosphere mixer with fader levers. Both widgets can be pinned to the canvas or detached to the screen.
-- A digital publishing patchbay, larger day labels, and knife cutting in Content.
-- Custom pressing/pinching/gripping cursors, left-facing knife, electrical socket sparks, snapping cable recoil, and interaction sound effects.
-- Grid content calendar with Posted marks and drag-to-reschedule.
+### What's New in 1.9.0
 
-Download and run **Sam's Canvas Setup 1.8.0.exe** to install on Windows. The installer is unsigned. macOS packaging is planned for a later build.
+- **Brand & Custom Logo:** Integrated the official "Sam's Canvas" custom logo across the application icon, welcome startup screen, sidebar header, project whiteboard title, Windows desktop taskbar icon, and installer.
+- **Startup Authentication Gate:**
+  - Authentication prompt presented immediately on the welcome screen before entering the workspace.
+  - Single-step Email OTP flow: enter your email, receive an instant 6-digit verification code, and confirm.
+  - Immediate entry upon OTP confirmation: session is created, securely saved, and the studio opens automatically with zero redundant sign-in prompts inside.
+  - Persistent sessions: your login state is preserved across application launches and restarts on both desktop and web.
+  - "Welcome back" return view recognizing your signed-in email with one-click direct entry and account switching options.
+  - Offline guest mode: "Continue as guest" escape hatch available to test locally without cloud sync.
+- **Supabase Cloud Synchronization:** Automatic real-time sync with Supabase for research boards, content items, shot sequences, and publishing calendars.
+- **Desktop & Web Parity:** Full offline-first local storage fallback with cloud synchronization when online.
 
-Work saves locally. Export a workspace backup from the avatar menu to move work between the web and desktop versions. The GitHub repository and this release are private.
+### Windows Installation
+
+Download and run **Sams-Canvas-Setup-1.9.0.exe** to install Sam's Canvas on Windows.
+The executable is also available unpacked in `release-1.9.0/win-unpacked/Sam's Canvas.exe`.
+
+SHA256 checksums are provided in `SHA256SUMS.txt`.
