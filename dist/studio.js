@@ -1,6 +1,7 @@
 /* Small offline interaction sounds, designed in Web Audio and controlled by Settings. */
 var StudioSFX={audio:null,
- async play(kind){if(!state.sound)return;try{if(this.audio?.state==='closed')this.audio=null;const a=this.audio||(this.audio=new(window.AudioContext||window.webkitAudioContext)());await a.resume();const t=a.currentTime+(kind==='stamp'?.1:0),out=a.createGain(),limit=a.createDynamicsCompressor();limit.threshold.value=-16;limit.ratio.value=5;out.gain.value=.5;out.connect(limit).connect(a.destination);let end=.3;
+ async unlock(){if(!state.sound)return;try{if(!this.audio||this.audio.state==='closed')this.audio=new(window.AudioContext||window.webkitAudioContext)();await this.audio.resume()}catch{}},
+ async play(kind){if(!state.sound)return;try{if(this.audio?.state==='closed')this.audio=null;const a=this.audio||(this.audio=new(window.AudioContext||window.webkitAudioContext)());await a.resume();const t=a.currentTime+(kind==='stamp'?.1:0),out=a.createGain();out.gain.value=.5;out.connect(a.destination);let end=.3;
  const tone=(type,from,to,duration,volume,delay=0)=>{const o=a.createOscillator(),g=a.createGain(),start=t+delay;o.type=type;o.frequency.setValueAtTime(from,start);o.frequency.exponentialRampToValueAtTime(Math.max(20,to),start+duration);g.gain.setValueAtTime(.0001,start);g.gain.exponentialRampToValueAtTime(volume,start+.006);g.gain.exponentialRampToValueAtTime(.0001,start+duration);o.connect(g).connect(out);o.start(start);o.stop(start+duration+.01);o.onended=()=>{o.disconnect();g.disconnect()};end=Math.max(end,delay+duration+.03)};
  const noise=(duration,volume,freq,filterType='bandpass',delay=0)=>{const length=Math.ceil(a.sampleRate*duration),buffer=a.createBuffer(1,length,a.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<length;i++)data[i]=(Math.random()*2-1)*(1-i/length);const src=a.createBufferSource(),filter=a.createBiquadFilter(),g=a.createGain(),start=t+delay;src.buffer=buffer;filter.type=filterType;filter.frequency.value=freq;filter.Q.value=.8;g.gain.setValueAtTime(volume,start);g.gain.exponentialRampToValueAtTime(.0001,start+duration);src.connect(filter).connect(g).connect(out);src.start(start);src.onended=()=>{src.disconnect();filter.disconnect();g.disconnect()};end=Math.max(end,delay+duration+.03)};
  if(kind==='grab'){tone('sine',340,520,.055,.11);noise(.025,.13,1700);}
@@ -9,7 +10,7 @@ var StudioSFX={audio:null,
  else if(kind==='disconnect'){noise(.035,.2,1600);tone('sine',360,140,.12,.14);}
  else if(kind==='spark'){noise(.045,.15,5300,'highpass');noise(.018,.11,3400,'bandpass',.05);tone('sine',1800,900,.06,.035);}
  else{tone('sine',170,90,.075,.19);noise(.025,.18,2200);tone('sine',760,1260,.07,.085,.025);tone('sine',1260,940,.065,.06,.08);}
- setTimeout(()=>{out.disconnect();limit.disconnect()},(end+.2)*1000);
+ setTimeout(()=>{out.disconnect()},(end+.2)*1000);
  }catch{}}
 };
 var StudioFX={
@@ -248,7 +249,7 @@ var StudioPointer = {
     window.addEventListener('blur',()=>{this.pressed=false;$('#studioPointer')?.classList.remove('visible')});
   },
   move(e) {
-    this.last=e;const pointer=$('#studioPointer');if(!pointer)return;pointer.style.translate=e.clientX+'px '+e.clientY+'px';const releasing=$('#wireDragHand.releasing');if(releasing){releasing.style.left=(e.clientX-8.5)+'px';releasing.style.top=(e.clientY-17)+'px';releasing.classList.toggle('gripping',this.pressed);}
+    this.last=e;const pointer=$('#studioPointer');if(!pointer)return;pointer.style.translate=e.clientX+'px '+e.clientY+'px';const releasing=$('#wireDragHand.releasing');if(releasing){releasing.style.translate=(e.clientX-8.5)+'px '+(e.clientY-17)+'px';releasing.classList.toggle('gripping',this.pressed);}
     const editing=e.target.closest('textarea,[contenteditable="plaintext-only"],input:not([type="range"]):not([type="color"]):not([type="checkbox"])');
     const canvas=e.target.closest('#canvas'),drawing=canvas&&!e.target.closest('.tool-options,.canvas-bottom');
     const resize=drag?.type==='transform'?drag.dir:e.target.closest('[data-resize]')?.dataset.resize;const resizeMode=resize?(resize==='n'||resize==='s'?'ns':resize==='e'||resize==='w'?'ew':resize==='ne'||resize==='sw'?'nesw':'nwse'):null;const mode=resizeMode?'resize-'+resizeMode:editing?'text':drawing&&tool==='pen'?'pen':document.body.classList.contains('wire-cut-mode')||drawing&&tool==='cut'||tab==='structure'&&ContentCamera.cut&&e.target.closest('#structureBody')&&!e.target.closest('.date-rail,.content-zoom-control')?'knife':e.target.closest('.port,.topic-port')&&!(tab==='whiteboard'&&['note','stamp','pen','text'].includes(tool))?'socket':drawing&&['note','stamp'].includes(tool)?'hidden':CalendarUI.drag?.moved?'hand':e.target.closest('button:not(.port):not(.topic-port),a,summary,[role="button"],input[type="checkbox"]')?'press':!e.target.closest('.stuck-stamp')&&e.target.closest('.node,.focus-clock,.soundscape-device,.topic-card,.calendar-topic')||drawing&&(tool==='hand'||spacePressed||this.pressed)?'hand':'arrow';
@@ -263,7 +264,7 @@ var CreativeStudio = {
     CanvasEditor.finish();document.activeElement?.blur?.();selectNode(null);setTool('select');$('#toolOptions').innerHTML='';
   },
   init() {
-    FocusClock.init();Soundscape.init();StudioPointer.init();
+    FocusClock.init();Soundscape.init();StudioPointer.init();document.addEventListener('pointerdown',()=>StudioSFX.unlock(),{once:true,capture:true});
     document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.matches('.port,.topic-port'))return;const toolKey=b.dataset.tool;requestAnimationFrame(()=>{const current=toolKey?$('[data-tool="'+toolKey+'"]'):b;if(!current?.isConnected)return;current.classList.remove('button-press');current.getBoundingClientRect();current.classList.add('button-press');setTimeout(()=>current.classList.remove('button-press'),240)})},true);
     document.addEventListener('pointermove',e=>StampKit.move(e));
     document.addEventListener('pointerdown',e=>{if(!e.target.closest('.stuck-stamp,#attachedStampActions,#contextMenu'))StampKit.clearAttachment()},true);
