@@ -14,8 +14,8 @@ Open http://localhost:4173. The static `dist/` folder also works on an HTTPS sta
 
 ## Windows
 
-Installer: `release-1.9.0/Sam's Canvas Setup 1.9.0.exe`.
-Portable application: `release-1.9.0/win-unpacked/Sam's Canvas.exe`.
+Installer: `release-1.10.0/Sam's Canvas Setup 1.10.0.exe`.
+Portable application: `release-1.10.0/win-unpacked/Sam's Canvas.exe`.
 
 ```sh
 npm ci

@@ -78,17 +78,16 @@ var Welcome = {
           <form id="welcomeOtpForm" class="welcome-auth-form">
             <label class="welcome-auth-label" for="welcomeOtp">VERIFICATION CODE</label>
             <div style="font-size:12px;color:var(--text-2);margin-bottom:2px">
-              Code sent to <strong>${this.escape(this.pendingEmail)}</strong>
+              We sent an 8-digit code to <strong>${this.escape(this.pendingEmail)}</strong>
             </div>
-            <input type="text" id="welcomeOtp" class="welcome-input" inputmode="numeric" autocomplete="one-time-code" minlength="6" maxlength="10" placeholder="Enter 6-digit code" required autofocus>
+            <input type="text" id="welcomeOtp" class="welcome-input" inputmode="numeric" autocomplete="one-time-code" minlength="8" maxlength="8" placeholder="Enter 8-digit code" required autofocus>
             <button type="submit" id="welcomeVerifyBtn" class="welcome-btn-full">
               Verify &amp; Enter Studio →
             </button>
           </form>
           <div class="welcome-auth-status" id="welcomeStatus"></div>
-          <div class="welcome-auth-links">
+          <div class="welcome-auth-links" style="justify-content:center">
             <button type="button" id="welcomeBackBtn" class="welcome-auth-link">← Use a different email</button>
-            <button type="button" id="welcomeGuestBtn" class="welcome-auth-link">Continue as guest →</button>
           </div>
         </div>
       `;
@@ -98,17 +97,12 @@ var Welcome = {
       const verifyBtn = document.getElementById('welcomeVerifyBtn');
       const statusEl = document.getElementById('welcomeStatus');
       const backBtn = document.getElementById('welcomeBackBtn');
-      const guestBtn = document.getElementById('welcomeGuestBtn');
 
       if (backBtn) {
         backBtn.onclick = () => {
           this.step = 'email';
           this.render();
         };
-      }
-
-      if (guestBtn) {
-        guestBtn.onclick = () => this.close();
       }
 
       if (otpInput) {
@@ -160,7 +154,7 @@ var Welcome = {
               toast('Welcome! Signed in as ' + (newSession.user?.email || this.pendingEmail));
             }
 
-            // Immediately close welcome screen & enter studio without any redundant forms inside
+            // Immediately enter studio workspace
             this.close();
           } catch (err) {
             verifyBtn.disabled = false;
@@ -182,13 +176,10 @@ var Welcome = {
           <label class="welcome-auth-label" for="welcomeEmail">CREATOR SIGN IN OR SIGN UP</label>
           <input type="email" id="welcomeEmail" class="welcome-input" placeholder="name@example.com" value="${this.escape(this.pendingEmail)}" required autocomplete="email" autofocus>
           <button type="submit" id="welcomeSendBtn" class="welcome-btn-full">
-            Send 6-digit sign-in code →
+            Send 8-digit sign-in code →
           </button>
         </form>
         <div class="welcome-auth-status" id="welcomeStatus"></div>
-        <div class="welcome-auth-links">
-          <button type="button" id="welcomeGuestBtn" class="welcome-auth-link">Continue as guest (test offline) →</button>
-        </div>
       </div>
     `;
 
@@ -196,11 +187,6 @@ var Welcome = {
     const emailInput = document.getElementById('welcomeEmail');
     const sendBtn = document.getElementById('welcomeSendBtn');
     const statusEl = document.getElementById('welcomeStatus');
-    const guestBtn = document.getElementById('welcomeGuestBtn');
-
-    if (guestBtn) {
-      guestBtn.onclick = () => this.close();
-    }
 
     if (emailInput) {
       requestAnimationFrame(() => emailInput.focus({ preventScroll: true }));
@@ -216,7 +202,7 @@ var Welcome = {
         sendBtn.textContent = 'Sending code…';
         if (statusEl) {
           statusEl.style.color = 'var(--accent)';
-          statusEl.textContent = 'Sending verification code to your email…';
+          statusEl.textContent = 'Sending 8-digit code to your email…';
         }
 
         try {
@@ -230,7 +216,7 @@ var Welcome = {
           this.render();
         } catch (err) {
           sendBtn.disabled = false;
-          sendBtn.textContent = 'Send 6-digit sign-in code →';
+          sendBtn.textContent = 'Send 8-digit sign-in code →';
           if (statusEl) {
             statusEl.style.color = '#ef4444';
             statusEl.textContent = err.message || 'Could not send verification code.';

@@ -69,7 +69,7 @@ let cloudSession;try{cloudSession=JSON.parse(localStorage.getItem('threadline.cl
 window.cloudSession=cloudSession;
 let cloudReady=false,cloudVersion=null,cloudBusy=false,cloudConflict=false;
 try{cloudVersion=localStorage.getItem('threadline.cloud.version')||null}catch{}
-function updateProfileUI(){const pBtn=$('#profileButton'),wBtn=$('#workspaceButton'),aBtn=$('#avatarButton'),email=cloudSession?.user?.email,initial=email?email[0].toUpperCase():'S';if(cloudSession&&email){if(pBtn)pBtn.innerHTML=`<span class="avatar">${initial}</span><span><strong>${escapeHTML(email.split('@')[0])}</strong><small>${cloudReady?'Cloud synced':'Connected'}</small></span><span class="online-dot" style="background:#22c55e"></span>`;if(wBtn){const s=wBtn.querySelector('small');if(s)s.textContent=cloudReady?'Cloud workspace':'Connected'}if(aBtn)aBtn.textContent=initial}else{if(pBtn)pBtn.innerHTML=`<span class="avatar">S</span><span><strong>Your creative space</strong><small>Saved on this device</small></span><span class="online-dot"></span>`;if(wBtn){const s=wBtn.querySelector('small');if(s)s.textContent='Personal workspace'}if(aBtn)aBtn.textContent='S'}}
+function updateProfileUI(){const pBtn=$('#profileButton'),wBtn=$('#workspaceButton'),aBtn=$('#avatarButton'),email=cloudSession?.user?.email,initial=email?email[0].toUpperCase():'S';if(cloudSession&&email){if(pBtn)pBtn.innerHTML=`<span class="avatar">${initial}</span><span><strong>${escapeHTML(email.split('@')[0])}</strong><small>${cloudReady?'Cloud synced':'Connected'}</small></span><span class="online-dot" style="background:#22c55e"></span>`;if(wBtn){const s=wBtn.querySelector('small');if(s)s.textContent=cloudReady?'Cloud workspace':'Connected'}if(aBtn)aBtn.textContent=initial}else{if(pBtn)pBtn.innerHTML=`<span class="avatar">S</span><span><strong>Content planning hub</strong><small>Saved on this device</small></span><span class="online-dot"></span>`;if(wBtn){const s=wBtn.querySelector('small');if(s)s.textContent='Personal workspace'}if(aBtn)aBtn.textContent='S'}}
 const board=()=>state.boards.find(b=>b.id===state.activeBoard)||state.boards[0];
 function validWorkspace(s){
  if(!s||s.version!==1||!Array.isArray(s.boards)||!s.boards.length||s.boards.length>200||!Array.isArray(s.topics)||s.topics.length>1000)return false;
@@ -258,7 +258,7 @@ function cloudSettings(){
     <div>
       <div class="eyebrow">YOUR STUDIO, WHEREVER YOU ARE</div>
       <h2 id="modalTitle">${cloudSession?'Studio cloud account':'Connect to Creator Studio'}</h2>
-      <p>${cloudSession?'Your creative space auto-syncs securely with Supabase.':'Sign in to sync your research boards, shot lists, and calendar across devices.'}</p>
+      <p>${cloudSession?'Content planning hub auto-syncs securely with Supabase.':'Sign in to sync your research boards, shot lists, and calendar across devices.'}</p>
     </div>
     ${closeButton()}
   </div>
