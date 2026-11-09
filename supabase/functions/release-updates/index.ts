@@ -68,7 +68,10 @@ Deno.serve(async (request) => {
       let yaml = await (await fetch(release.assets.find((asset: any) => asset.name === 'latest.yml').url, {
         headers: { ...ghHeaders, Accept: 'application/octet-stream' },
       })).text();
-      yaml = yaml.replace(/^(\s*(?:url|path):\s*)["']?([^\s"']+)["']?\s*$/gm, (_match, prefix, filename) => `${prefix}${new URL(`asset/${tag}/${encodeURIComponent(filename)}`, functionRoot).href}`);
+      yaml = yaml.replace(/^(\s*(?:url|path):\s*)(.*?)\s*$/gm, (_match, prefix, rawFilename) => {
+        const filename = String(rawFilename).replace(/^["']|["']$/g, '');
+        return `${prefix}${new URL(`asset/${tag}/${encodeURIComponent(filename)}`, functionRoot).href}`;
+      });
       return new Response(yaml, {
         headers: { ...corsHeaders(), 'Content-Type': 'text/yaml; charset=utf-8', 'Cache-Control': 'no-store' },
       });
