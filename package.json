@@ -1,11 +1,11 @@
 {
   "name": "sams-canvas-creator-studio",
-  "version": "1.10.1",
+  "version": "1.10.2",
   "private": true,
   "description": "A thoughtful content research, planning, and publishing workspace.",
   "scripts": {
     "start": "node server.mjs",
-    "check": "node --check dist/editor.js && node --check dist/gestures.js && node --check dist/studio.js && node --check dist/canvas-tools.js && node --check dist/projects.js && node --check dist/calendar.js && node --check dist/welcome.js && node --check dist/view-session.js && node --check dist/app.js && node --check dist/sw.js && node --check server.mjs",
+    "check": "node --check dist/editor.js && node --check dist/gestures.js && node --check dist/studio.js && node --check dist/canvas-tools.js && node --check dist/projects.js && node --check dist/calendar.js && node --check dist/welcome.js && node --check dist/content.js && node --check dist/view-session.js && node --check dist/app.js && node --check dist/sw.js && node --check server.mjs",
     "desktop": "electron desktop/main.cjs",
     "desktop:build": "node --use-system-ca ./node_modules/electron-builder/cli.js --win nsis",
     "test": "node studio.test.cjs"
@@ -15,7 +15,7 @@
     "appId": "studio.threadline.app",
     "productName": "Sam's Canvas",
     "directories": {
-      "output": "release-1.10.1"
+      "output": "release-1.10.2"
     },
     "files": [
       "dist/**/*",

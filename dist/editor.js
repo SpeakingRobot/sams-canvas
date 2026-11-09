@@ -241,16 +241,16 @@ var CanvasEditor = {
   },
   ensureContent(b) {
     let content = state.topics.find(t => t.boardId === b.id);
+    if (!content && b.contentArchived) return null;
     let slot={x:44,y:82};if(!content){const columns=Math.max(1,Math.min(3,Math.floor((($('#topicField')?.clientWidth||1000)-60)/330)));for(let i=0;i<3000;i++){slot={x:44+i%columns*330,y:82+Math.floor(i/columns)*235};if(!state.topics.some(t=>slot.x<(t.x??40)+312&&slot.x+312>(t.x??40)&&slot.y<(t.y??82)+215&&slot.y+215>(t.y??82)))break;}}
     if (!content) { content = { id: uid(), boardId: b.id, title: b.title, summary: '', pointers: derivePointers(b), platform: 'YouTube', format: 'Video', date: null, time: '', status: 'Idea', color: b.color, x:slot.x,y:slot.y }; state.topics.push(content); }
-    state.topics.filter(t => t.boardId === b.id).forEach(t => t.title = b.title);
     return content;
   },
   rename(b, value) {
     b.title = value.trim() || 'Untitled content';
-    this.ensureContent(b);
-    sequences().filter(s => s.boardId === b.id).forEach(s => s.contentTitle = b.title);
-    b.nodes.filter(n => n.type === 'sequencer').forEach(n => n.title = b.title);
+    const content = this.ensureContent(b);
+    if (content) sequences().filter(s => s.boardId === b.id).forEach(s => s.contentTitle = content.title);
+    b.nodes.filter(n => n.type === 'sequencer').forEach(n => n.title = content?.title || b.title);
     renderSidebar(); save();
   },
   sequenceForBoard(id) {
@@ -260,7 +260,7 @@ var CanvasEditor = {
   ensureSequence(content, reopen) {
     let seq = this.sequenceForBoard(content.boardId);
     if (!seq) { seq = { id: uid(), contentId: content.id, contentTitle: content.title, boardId: content.boardId, createdAt: new Date().toISOString(), completedAt: null, archived: false, shots: [] }; sequences().push(seq); }
-    seq.contentId = content.id; seq.contentTitle = state.boards.find(b => b.id === content.boardId)?.title || content.title;
+    seq.contentId = content.id; seq.contentTitle = content.title;
     if (reopen && seq.archived) { seq.archived = false; seq.completedAt = null; if (seq.shots.length) { seq.shots.at(-1).done = false; seq.shots.at(-1).completedAt = null; } }
     return seq;
   },
@@ -270,7 +270,7 @@ var CanvasEditor = {
     shotContentId = content.id; shotMode = 'active'; shotHistoryId = null; save(); renderShots();
   },
   createSequencer() {
-    checkpoint(); const content = this.ensureContent(board()), seq = this.ensureSequence(content, false);
+    checkpoint(); const content = this.ensureContent(board()); if (!content) return toast('Create content for this board before adding a shot sequencer.'); const seq = this.ensureSequence(content, false);
     if (!seq.shots.length) seq.shots = (content.pointers.length ? content.pointers : ['']).map(makeShot);
     embedSequence(seq.id);
   },
@@ -278,7 +278,7 @@ var CanvasEditor = {
   init() {
     state.boards.forEach(b=>b.nodes.forEach(n=>{const s=nodeScale(n);if(Math.abs(s.x-s.y)>.001){if(['stamp','clock'].includes(n.type)){n.scaleX=n.scaleY=Math.sqrt(s.x*s.y)}else{n.w=Math.min(3000,Math.max(n.type==='sticky'?160:80,n.w*s.x));if(n.type==='shape')n.h=(n.h||110)*s.y;else if(n.type==='image'){n.displayHeight=(n.displayHeight||n.imageHeight||170)*s.y;n.stretchedImage=true}else if(n.minHeight)n.minHeight*=s.y;n.scaleX=n.scaleY=1;}}if(n.inline&&n.type==='sticky'&&n.w<160)n.w=245}));
     state.boards.forEach(b => this.ensureContent(b));
-    sequences().forEach(seq => { const b = state.boards.find(b => b.id === seq.boardId); if (b) { seq.contentTitle = b.title; seq.contentId = this.ensureContent(b).id; } });
+    sequences().forEach(seq => { const b = state.boards.find(b => b.id === seq.boardId); if (b) { const content = this.ensureContent(b); if (content) { seq.contentTitle = content.title; seq.contentId = content.id; } } });
     const input = $('#boardNameInput');
     if (input) { input.onfocus = () => checkpoint(); input.oninput = () => this.rename(board(), input.value); input.onblur = () => { this.rename(board(), input.value); input.value = board().title; }; input.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } }; }
     document.addEventListener('pointermove', e => this.moveStickyCursor(e));

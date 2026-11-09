@@ -1,3 +1,21 @@
+# Sam's Canvas 1.10.2 — Testing preview
+
+### What's new
+
+- **Simpler content details:** Create and edit only the content name, platform, video or picture format, and description.
+- **Platform icons:** The platform menu shows a custom mark beside each social, publishing, and web destination.
+- **Better card controls:** Right-click a content card to edit details or delete it. Select a card and press Delete to remove it with its linked board and shot history.
+- **Content names stay independent:** Changing content details no longer renames its research board.
+- **No generic card subtitle:** Cards show the creator’s description instead of the placeholder sentence.
+
+### Windows Installation
+
+Download and run **Sams-Canvas-Setup-1.10.2.exe** to install Sam's Canvas on Windows.
+
+SHA256 checksums are provided in `SHA256SUMS.txt`.
+
+---
+
 # Sam's Canvas 1.10.1 — Testing preview
 
 A private testing build of Sam's Canvas — Creator Studio with a clearer new-content creation flow.
