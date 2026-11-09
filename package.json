@@ -32,7 +32,8 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Sam's Canvas",
-      "displayLanguageSelector": false
+      "displayLanguageSelector": false,
+      "artifactName": "Sams-Canvas-Setup-${version}.${ext}"
     },
     "publish": [
       {

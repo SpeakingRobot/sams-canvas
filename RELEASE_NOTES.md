@@ -10,7 +10,7 @@
 
 ### Windows Installation
 
-Download and run **Sam's Canvas Setup 1.11.0.exe** to install Sam's Canvas on Windows.
+Download and run the Windows setup installer to install Sam's Canvas.
 
 ---
 
