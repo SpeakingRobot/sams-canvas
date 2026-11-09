@@ -1,6 +1,8 @@
 node_modules/
 release/
 release-*/
+!supabase/functions/release-updates/
+!supabase/functions/release-updates/**
 *.tar.gz
 .env*
 /*-preview.jpg

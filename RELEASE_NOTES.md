@@ -1,3 +1,19 @@
+# Sam's Canvas 1.11.0 — In-app updates
+
+### What's new
+
+- **Check updates inside Settings:** The Windows desktop app checks for a newer release when you open it and keeps manual checks available in Settings.
+- **Review before updating:** Read release notes before deciding to download.
+- **Download and install in the app:** See download progress, then install the update and relaunch Sam's Canvas.
+- **Private release delivery:** The desktop app authenticates update requests with the signed-in Supabase session. The private GitHub release token stays server-side in the Supabase Edge Function.
+- **Simpler Windows setup:** The NSIS installer keeps the guided install flow, adds a Start menu shortcut, and uses Sam's Canvas as the shortcut name.
+
+### Windows Installation
+
+Download and run **Sam's Canvas Setup 1.11.0.exe** to install Sam's Canvas on Windows.
+
+---
+
 # Sam's Canvas 1.10.2 — Testing preview
 
 ### What's new
