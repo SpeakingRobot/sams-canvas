@@ -6,7 +6,6 @@ for(const name of ['Threadline','threadline-creator-studio']){const legacy=path.
 const {pathToFileURL}=require('node:url');
 protocol.registerSchemesAsPrivileged([{scheme:'threadline',privileges:{standard:true,secure:true,supportFetchAPI:true,corsEnabled:true,stream:true}}]);
 let updaterWindow=null;
-let updaterSessionToken='';
 let updaterConfigured=false;
 autoUpdater.autoDownload=false;
 autoUpdater.autoInstallOnAppQuit=false;
@@ -18,20 +17,15 @@ autoUpdater.on('download-progress',progress=>sendUpdate('progress',{percent:prog
 autoUpdater.on('update-downloaded',info=>sendUpdate('downloaded',{version:info.version}));
 autoUpdater.on('error',error=>sendUpdate('error',{message:String(error?.message||'Update check failed').slice(0,300)}));
 function sendUpdate(type,payload={}){if(updaterWindow&&!updaterWindow.isDestroyed())updaterWindow.webContents.send('updater:event',{type,...payload})}
-function configureUpdater(sessionToken){
- if(typeof sessionToken!=='string'||sessionToken.length<20||sessionToken.length>8192)throw new Error('Sign in to check for updates.');
- updaterSessionToken=sessionToken;
- autoUpdater.requestHeaders={Authorization:`Bearer ${sessionToken}`,apikey:'sb_publishable_hwcDKXBbPzYiCiaG-mCGwg_1UW3BwkP'};
- autoUpdater.setFeedURL({provider:'generic',url:'https://tfbkpgqzkgtrabgrvqlj.supabase.co/functions/v1/release-updates'});
+function configureUpdater(){
+ autoUpdater.setFeedURL({provider:'github',owner:'SpeakingRobot',repo:'sams-canvas'});
  updaterConfigured=true;
 }
-ipcMain.handle('updater:check',async(_event,token)=>{try{configureUpdater(token);await autoUpdater.checkForUpdates();return {ok:true}}catch(error){sendUpdate('error',{message:String(error?.message||error).slice(0,300)});throw error}});
+ipcMain.handle('updater:check',async()=>{try{configureUpdater();await autoUpdater.checkForUpdates();return {ok:true}}catch(error){sendUpdate('error',{message:String(error?.message||error).slice(0,300)});throw error}});
 ipcMain.handle('updater:version',()=>app.getVersion());
-ipcMain.handle('updater:auth',(_event,token)=>{configureUpdater(token);return true});
-ipcMain.handle('updater:clear-auth',()=>{updaterSessionToken='';updaterConfigured=false;autoUpdater.requestHeaders=null;return true});
-ipcMain.handle('updater:download',async()=>{if(!updaterConfigured||!updaterSessionToken)throw new Error('Sign in to download updates.');return autoUpdater.downloadUpdate()});
+ipcMain.handle('updater:download',async()=>{if(!updaterConfigured)configureUpdater();return autoUpdater.downloadUpdate()});
 ipcMain.handle('updater:install',()=>{if(!updaterConfigured)throw new Error('No downloaded update is ready.');autoUpdater.quitAndInstall(false,true);return true});
-ipcMain.handle('updater:release-notes',async(_event,token)=>{configureUpdater(token);const url='https://tfbkpgqzkgtrabgrvqlj.supabase.co/functions/v1/release-updates/release-notes';const response=await fetch(url,{headers:autoUpdater.requestHeaders,signal:AbortSignal.timeout(20000)});if(!response.ok)throw new Error(`Release notes unavailable (${response.status}).`);return response.json()});
+ipcMain.handle('updater:release-notes',async()=>{const response=await fetch('https://api.github.com/repos/SpeakingRobot/sams-canvas/releases?per_page=30',{headers:{Accept:'application/vnd.github+json','User-Agent':'Sams-Canvas-Updater'},signal:AbortSignal.timeout(20000)});if(!response.ok)throw new Error(`Release notes unavailable (${response.status}).`);const releases=await response.json();const release=releases.find(item=>!item.draft&&item.assets?.some(asset=>asset.name==='latest.yml'));if(!release)throw new Error('No desktop release notes are available yet.');return {version:String(release.tag_name||'').replace(/^v/,''),name:release.name||release.tag_name,body:release.body||'',published_at:release.published_at,html_url:release.html_url}});
 app.whenReady().then(()=>{
  const root=path.resolve(__dirname,'../dist');
  protocol.handle('threadline',request=>{const u=new URL(request.url);let pathname;try{pathname=decodeURIComponent(u.pathname)}catch{return new Response('Bad request',{status:400})}const target=path.resolve(root,'.'+(pathname==='/'?'/index.html':pathname));if(!target.startsWith(root+path.sep))return new Response('Forbidden',{status:403});return net.fetch(pathToFileURL(target).href)});

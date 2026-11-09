@@ -390,7 +390,7 @@ function cloudSettings(){
     try{await sb('/auth/v1/logout',{method:'POST'},true)}catch{}
     cloudSession=null;cloudReady=false;cloudVersion=null;window.cloudSession=null;
     localStorage.removeItem('threadline.cloud.session');localStorage.removeItem('threadline.cloud.version');
-    window.desktopUpdater?.clearSession?.();UpdaterUI.sessionChanged();updateProfileUI();cloudSettings();toast('Signed out. Your local workspace is still here.');
+    UpdaterUI.sessionChanged();updateProfileUI();cloudSettings();toast('Signed out. Your local workspace is still here.');
     if(typeof Welcome!=='undefined'&&Welcome.render)Welcome.render();
   };
 }

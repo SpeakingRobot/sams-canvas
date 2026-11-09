@@ -1,3 +1,18 @@
+# Sam's Canvas 1.11.1 — Public GitHub updates
+
+### What's new
+
+- **Direct SpeakingRobot updates:** The Windows app checks public releases from `SpeakingRobot/sams-canvas` without a Supabase release token.
+- **Release notes in Settings:** View changes from the latest published GitHub release before downloading.
+- **Reliable installer names:** New Windows builds use a simple filename that stays unchanged on GitHub and matches the updater manifest.
+- **Content form scrollbars:** Hide scrollbar tracks on the content form and platform menu while keeping scrolling available.
+
+### Windows Installation
+
+Download and run the Windows setup installer to install or update Sam's Canvas.
+
+---
+
 # Sam's Canvas 1.11.0 — In-app updates
 
 ### What's new
@@ -5,7 +20,7 @@
 - **Check updates inside Settings:** The Windows desktop app checks for a newer release when you open it and keeps manual checks available in Settings.
 - **Review before updating:** Read release notes before deciding to download.
 - **Download and install in the app:** See download progress, then install the update and relaunch Sam's Canvas.
-- **Private release channel:** The updater is wired to the SpeakingRobot Supabase proxy; its server-side GitHub token must be configured before update downloads are available.
+- **SpeakingRobot releases:** The desktop app is wired to the SpeakingRobot Supabase proxy.
 - **Simpler Windows setup:** The NSIS installer keeps the guided install flow, adds a Start menu shortcut, and uses Sam's Canvas as the shortcut name.
 
 ### Windows Installation

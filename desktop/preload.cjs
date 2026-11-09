@@ -2,12 +2,10 @@ const {contextBridge,ipcRenderer}=require('electron');
 
 contextBridge.exposeInMainWorld('desktopUpdater',Object.freeze({
  version:()=>ipcRenderer.invoke('updater:version'),
- setToken:token=>ipcRenderer.invoke('updater:auth',token),
- clearSession:()=>ipcRenderer.invoke('updater:clear-auth'),
- check:token=>ipcRenderer.invoke('updater:check',token),
+ check:()=>ipcRenderer.invoke('updater:check'),
  download:()=>ipcRenderer.invoke('updater:download'),
  install:()=>ipcRenderer.invoke('updater:install'),
- releaseNotes:token=>ipcRenderer.invoke('updater:release-notes',token),
+ releaseNotes:()=>ipcRenderer.invoke('updater:release-notes'),
  onEvent:callback=>{
   if(typeof callback!=='function')return()=>{};
   const listener=(_event,payload)=>callback(payload);
