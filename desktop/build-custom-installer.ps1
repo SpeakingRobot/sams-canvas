@@ -11,6 +11,7 @@ $engine = Join-Path $releaseDir $engineName
 $customSetup = Join-Path $projectRoot ("installer\out\SamsCanvasSetup.exe")
 $finalSetup = Join-Path $releaseDir $customSetupName
 $manifestPath = Join-Path $releaseDir 'latest.yml'
+$manifest = Get-Content -LiteralPath $manifestPath -Raw
 $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 
 function Get-Sha256Hex([string]$Path) {
@@ -28,14 +29,11 @@ $icon = Join-Path $projectRoot 'dist\app.ico'
 & $compiler /nologo /target:winexe /platform:anycpu /optimize+ "/out:$customSetup" "/win32icon:$icon" /reference:System.dll /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll /reference:System.Web.Extensions.dll $source
 if ($LASTEXITCODE -ne 0) { throw "Could not compile custom setup (csc exit $LASTEXITCODE)." }
 
-if (Test-Path -LiteralPath $oldSetup) {
-    $existingSetupHash = Get-Sha256Hex $oldSetup
-    $customSetupHash = Get-Sha256Hex $customSetup
-    if ($existingSetupHash -ne $customSetupHash) { Move-Item -LiteralPath $oldSetup -Destination $engine -Force }
+if ($manifest -notmatch '(?m)^customInstaller:' -and (Test-Path -LiteralPath $oldSetup)) {
+    Move-Item -LiteralPath $oldSetup -Destination $engine -Force
 }
 if (-not (Test-Path -LiteralPath $engine)) { throw "The silent update engine is missing: $engine" }
 Copy-Item -LiteralPath $customSetup -Destination $finalSetup -Force
-$manifest = Get-Content -LiteralPath $manifestPath -Raw
 $manifestParts = [regex]::Split($manifest, '(?m)^packages:', 2)
 if ($manifestParts.Count -ne 2) { throw "The updater manifest has no x64 package section: $manifestPath" }
 $mainManifest = $manifestParts[0]

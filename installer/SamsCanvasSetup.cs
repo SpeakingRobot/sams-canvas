@@ -36,11 +36,17 @@ namespace SamsCanvasSetup
         private readonly bool updateMode;
         private readonly bool forceRun;
         private readonly string installDirectory;
+        private readonly string targetVersion;
 
         public SetupWindow(string[] args)
         {
             existingPackage = ReadArgument(args, "--package-file");
             updateMode = existingPackage != null || Array.Exists(args, delegate(string arg) { return String.Equals(arg, "--updated", StringComparison.OrdinalIgnoreCase); });
+            if (existingPackage != null)
+            {
+                Match packageVersion = Regex.Match(Path.GetFileNameWithoutExtension(existingPackage), "^package-(.+)$");
+                if (packageVersion.Success) targetVersion = packageVersion.Groups[1].Value;
+            }
             forceRun = Array.Exists(args, delegate(string arg) { return String.Equals(arg, "--force-run", StringComparison.OrdinalIgnoreCase); });
             foreach (string arg in args) if (arg.StartsWith("/D=", StringComparison.OrdinalIgnoreCase)) installDirectory = arg.Substring(3);
             Text = updateMode ? "Sam's Canvas Update" : "Sam's Canvas Setup";
@@ -169,7 +175,7 @@ namespace SamsCanvasSetup
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
                 SetStage("CONNECTING TO SPEAKINGROBOT", "Checking the latest Sam's Canvas release…", 0);
-                ReleaseFiles files = await GetLatestRelease();
+                ReleaseFiles files = await GetLatestRelease(targetVersion);
                 string cache = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SamsCanvas", "Setup");
                 Directory.CreateDirectory(cache);
                 string packagePath = Path.Combine(cache, files.PackageName);
@@ -240,9 +246,11 @@ namespace SamsCanvasSetup
             }
         }
 
-        private async Task<ReleaseFiles> GetLatestRelease()
+        private async Task<ReleaseFiles> GetLatestRelease(string version)
         {
-            string api = "https://api.github.com/repos/SpeakingRobot/sams-canvas/releases/latest";
+            string api = version == null
+                ? "https://api.github.com/repos/SpeakingRobot/sams-canvas/releases/latest"
+                : "https://api.github.com/repos/SpeakingRobot/sams-canvas/releases/tags/v" + Uri.EscapeDataString(version);
             string json;
             using (WebClient client = new WebClient())
             {
