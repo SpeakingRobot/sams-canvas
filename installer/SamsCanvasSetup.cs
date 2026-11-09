@@ -87,6 +87,7 @@ namespace SamsCanvasSetup
             title.ForeColor = ink;
             title.Location = new Point(371, 104);
             title.Size = new Size(465, 76);
+            Controls.Add(title);
             title.BringToFront();
 
             body.Text = updateMode ? "We’ll bring Sam's Canvas up to date, then reopen your workspace." : "A calm, connected workspace for planning your next story. Install Sam's Canvas for your Windows account.";
@@ -94,11 +95,13 @@ namespace SamsCanvasSetup
             body.ForeColor = muted;
             body.Location = new Point(374, 192);
             body.Size = new Size(435, 60);
+            Controls.Add(body);
             body.BringToFront();
 
             stageLine.Location = new Point(374, 282);
             stageLine.Size = new Size(433, 1);
             stageLine.BackColor = Color.FromArgb(229, 234, 242);
+            Controls.Add(stageLine);
             stageLine.BringToFront();
 
             state.Text = "READY WHEN YOU ARE";
@@ -106,6 +109,7 @@ namespace SamsCanvasSetup
             state.ForeColor = muted;
             state.AutoSize = true;
             state.Location = new Point(375, 312);
+            Controls.Add(state);
             state.BringToFront();
 
             percent.Text = "";
@@ -114,10 +118,12 @@ namespace SamsCanvasSetup
             percent.TextAlign = ContentAlignment.MiddleRight;
             percent.Location = new Point(733, 307);
             percent.Size = new Size(74, 24);
+            Controls.Add(percent);
             percent.BringToFront();
 
             progress.Location = new Point(374, 342);
             progress.Size = new Size(433, 8);
+            Controls.Add(progress);
             progress.BringToFront();
 
             primary.Text = updateMode ? "Install update" : "Install Sam's Canvas";
@@ -127,6 +133,7 @@ namespace SamsCanvasSetup
             primary.ForeColor = Color.White;
             primary.Font = new Font("Segoe UI Semibold", 10.5F);
             primary.Click += async delegate { if (completed) LaunchApp(); else await BeginInstall(); };
+            Controls.Add(primary);
             primary.BringToFront();
 
             secondary.Text = "Release notes";
@@ -146,6 +153,7 @@ namespace SamsCanvasSetup
                 }
                 Process.Start(new ProcessStartInfo("https://github.com/SpeakingRobot/sams-canvas/releases/latest") { UseShellExecute = true });
             };
+            Controls.Add(secondary);
             secondary.BringToFront();
 
             var footer = new Label { Text = "FREE TO CREATE  ·  DESIGNED FOR WINDOWS", Font = new Font("Segoe UI", 7.2F), ForeColor = Color.FromArgb(151, 161, 177), AutoSize = true, Location = new Point(374, 527) };
