@@ -47,7 +47,7 @@ var Welcome = {
 
       const enterBtn = document.getElementById('enterStudio');
       if (enterBtn) {
-        enterBtn.onclick = () => this.close();
+        enterBtn.onclick = () => { this.close(); setTimeout(() => window.CreatorTutorial?.openIfPending(), 280); };
         requestAnimationFrame(() => enterBtn.focus({ preventScroll: true }));
       }
 
@@ -149,13 +149,15 @@ var Welcome = {
             window.cloudSession = newSession;
 
             if (typeof updateProfileUI === 'function') updateProfileUI();
-            if (typeof startCloud === 'function') startCloud(true);
+            window.CreatorTutorial?.authenticated(newSession.user);
+            if (typeof startCloud === 'function') await startCloud(true);
             if (typeof toast === 'function') {
               toast('Welcome! Signed in as ' + (newSession.user?.email || this.pendingEmail));
             }
 
             // Immediately enter studio workspace
             this.close();
+            setTimeout(() => window.CreatorTutorial?.openIfPending(), 280);
           } catch (err) {
             verifyBtn.disabled = false;
             verifyBtn.textContent = 'Verify & Enter Studio →';
