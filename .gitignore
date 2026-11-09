@@ -1,6 +1,7 @@
 node_modules/
 release/
 release-*/
+/installer/out/
 *.tar.gz
 .env*
 /*-preview.jpg
