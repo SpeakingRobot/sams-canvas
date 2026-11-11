@@ -1,0 +1,28 @@
+# Shared canvases
+
+## Enable in Supabase
+
+1. Open the SQL Editor for the same Supabase project configured in Account & Cloud Sync.
+2. Paste the entire contents of `collaboration.sql` and click **Run**. Run `schema.sql` first if this is a new project.
+3. Reopen Sam’s Canvas 1.13.0. Both people must sign into their own accounts connected to this project.
+
+The migration runs in a transaction and can be run again. It adds `canvas_rooms`, `canvas_members`, `canvas_receipts`, membership policies, and four mutation functions. It does not alter `creator_workspaces`. No service-role key is used in the app.
+
+## Invite and open a canvas
+
+1. Open the canvas you want to share and click **Share** near the upper right.
+2. Click **Share this canvas**, then enter the other person’s existing account email and click **Invite collaborator**.
+3. The other person opens **Share → Shared with you** and selects the board.
+4. Both can edit. Each person keeps their own pan, zoom, selection, and current tab. Colored cursors show where the other person is pointing on the whiteboard; drag previews update while moving cards.
+
+Invites grant access immediately to an existing account; they do not send email. Only the owner can invite or remove other members. The owner can remove access in the Share dialog. Other private boards are not shared.
+
+## Sync behavior
+
+Cards, wires, drawings, content details, scheduling, and shot lists persist in the shared room. Changes to different card properties merge. Concurrent changes to the same property use the last server write; text is not merged character by character. Offline changes queue on the device and retry when it reconnects. The local storage limit and a 20 MB shared-board payload limit still apply.
+
+Private Supabase Realtime channels carry presence, cursors, drag previews, and notifications to fetch durable updates. A revision poll catches missed notifications and checks membership every 1.5 seconds. Access removal is enforced on durable reads/writes immediately and the app disconnects the removed member’s channel on its next membership check. Cursors are never persisted in your board.
+
+## Validation
+
+`npm run check` and `npm test` include syntax and property-merge checks. During development, the migration was also executed against a temporary PostgreSQL runtime with owner/member/outsider roles, including retry and revocation checks. Two headless browser clients verified rendering, concurrent changes, and cursor positions with a simulated transport. A real two-account Supabase session must be checked after you apply the migration.

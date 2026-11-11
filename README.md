@@ -61,7 +61,7 @@ Optional setup:
 3. Open Account & cloud sync and enter the project URL and public publishable/anon key. Never use a secret or service-role key.
 4. Sign in with an email code when ready. If there is already a cloud workspace, choose the starting copy before syncing.
 
-Cloud revision checks avoid silent overwrites. Live collaboration, automatic social publishing, billing, and required sign-up are not implemented. A live Supabase project has not been connected or tested in this build.
+Cloud revision checks avoid silent overwrites for private workspaces. Shared boards use a separate collaboration layer; see supabase/COLLABORATION.md for setup. Automatic social publishing and billing are not implemented.
 
 ## Validation and source
 

@@ -7,3 +7,7 @@ The custom cursor uses the Hand and Hand Back Fist icons from Font Awesome Free 
 - Project license information: https://fontawesome.com/license/free
 
 Sam’s Canvas scales the SVG paths, colors the hands white, adds an outline, and animates between their open and closed states. The original SVG files with their copyright notices are retained alongside this file.
+
+Supabase JavaScript SDK (bundled locally for Realtime Presence/Broadcast), MIT license.
+Source: https://github.com/supabase/supabase-js
+Copyright Supabase. License: https://github.com/supabase/supabase-js/blob/master/LICENSE

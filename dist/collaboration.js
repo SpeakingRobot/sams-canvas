@@ -1,0 +1,78 @@
+/* Shared board persistence and private Supabase Realtime presence. */
+var Collaboration={
+ room:null,canonical:null,baseline:null,revision:-1,pending:[],client:null,channel:null,user:null,
+ busy:false,loading:false,lastPointer:0,peers:new Map(),status:'Offline',stopped:false,
+ init(){
+  const dock=document.createElement('div');dock.id='collabDock';document.body.append(dock);const button=document.createElement('button');button.id='shareCanvas';button.className='secondary-btn collab-share';button.innerHTML=icon('connect')+'<span>Share</span>';button.onclick=()=>this.open();dock.append(button);
+  const layer=document.createElement('div');layer.id='collaboratorCursors';layer.setAttribute('aria-hidden','true');$('#canvas').append(layer);
+  const badge=document.createElement('span');badge.id='collabPresence';dock.prepend(badge);
+  document.addEventListener('pointermove',e=>this.pointer(e),{passive:true});
+  document.addEventListener('pointerout',e=>{if(!e.relatedTarget)this.sendPointer(null)});
+  window.addEventListener('blur',()=>this.sendPointer(null));
+  window.addEventListener('online',()=>this.tick());
+  document.addEventListener('focusout',()=>setTimeout(()=>this.project(),0));
+  setInterval(()=>this.tick(),1500);setInterval(()=>this.paintCursors(),80);this.tick();
+ },
+ identity(){return cloudSession?.user?.id||null},
+ snapshot(){const b=board(),{nodes,edges,strokes,sharedRoom,...meta}=b;return clone({board:meta,nodes,edges,strokes,topics:state.topics.filter(t=>t.boardId===b.id),sequences:sequences().filter(s=>s.boardId===b.id)})},
+ queueKey(){return 'sams.collaboration.queue.'+this.user+'.'+this.room},
+ remember(){try{localStorage.setItem(this.queueKey(),JSON.stringify(this.pending))}catch{toast('Shared edits could not be saved on this device. Export a backup.')}},
+ changed(){if(!this.room||this.identity()!==this.user||board().sharedRoom!==this.room||!this.baseline)return;const next=this.snapshot(),ops=CollaborationModel.diff(this.baseline,next);this.baseline=next;if(!ops.length)return;this.pending.push({id:uid(),changes:ops});this.remember();clearTimeout(this.flushTimer);this.flushTimer=setTimeout(()=>this.flush(),140)},
+ async tick(){
+  if(this.loading)return;const user=this.identity(),room=board()?.sharedRoom;
+  if(!user||!room){if(this.room||this.user)this.stop();this.paintStatus();return}
+  if(this.user!==user||this.room!==room||!this.channel){await this.connect(room,user);return}
+  if(this.client&&cloudSession?.access_token!==this.token){this.token=cloudSession.access_token;this.client.realtime.setAuth(this.token)}
+  if(!this.busy){await this.flush();await this.pull()}this.paintStatus();
+ },
+ stop(){this.generation=(this.generation||0)+1;if(this.channel)this.client?.removeChannel(this.channel);this.client?.realtime.disconnect();this.channel=null;this.client=null;this.room=null;this.user=null;this.canonical=null;this.baseline=null;this.pending=[];this.peers.clear();this.revision=-1;this.busy=false;this.loading=false;$('#collaboratorCursors')?.replaceChildren()},
+ async connect(room,user){
+  this.stop();this.status='Connecting';this.lastError=null;this.loading=true;this.room=room;this.user=user;const generation=this.generation;this.baseline=this.snapshot();
+  try{
+   try{this.pending=JSON.parse(localStorage.getItem(this.queueKey())||'[]')}catch{this.pending=[]}
+   await this.pull();if(generation!==this.generation)return;
+   if(!this.canonical)return;
+   this.client=SupabaseRealtime.createClient(cloudConfig.url,cloudConfig.key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},realtime:{params:{eventsPerSecond:15}}});
+   this.token=cloudSession.access_token;await this.client.realtime.setAuth(this.token);
+   this.channel=this.client.channel('canvas:'+room,{config:{private:true,presence:{key:uid()},broadcast:{self:false}}});
+   this.channel.on('presence',{event:'sync'},()=>this.paintStatus());
+   this.channel.on('broadcast',{event:'cursor'},({payload})=>{if(payload?.boardId===board().id&&typeof payload.peer==='string'){this.peers.set(payload.peer,{...payload,seen:Date.now()});this.paintCursors()}});
+   this.channel.on('broadcast',{event:'changed'},()=>this.pull());
+   this.channel.subscribe(async status=>{if(generation!==this.generation)return;if(status==='SUBSCRIBED'){this.status='Live';await this.channel.track({name:this.name(),user_id:user});this.flush()}else{this.status='Reconnecting';this.paintStatus()}});
+  }catch(error){this.problem(error)}finally{if(generation===this.generation)this.loading=false;this.paintStatus()}
+ },
+ name(){return cloudSession?.user?.user_metadata?.display_name||cloudSession?.user?.email?.split('@')[0]||'Creator'},
+ problem(error){this.status=/no longer have access|not available/.test(error.message)?'Access unavailable':'Reconnecting';this.lastError=error.message;this.paintStatus()},
+ async pull(){if(!this.room||this.pulling)return;this.pulling=true;const room=this.room,generation=this.generation;try{const query='/rest/v1/canvas_rooms?id=eq.'+encodeURIComponent(room),heads=await sb(query+'&select=id,revision',{},true);if(generation!==this.generation)return;if(!heads?.length){this.channel?.unsubscribe();this.client?.realtime.disconnect();this.channel=null;throw Error('Shared canvas not available. Ask the owner for access.')}if(Number(heads[0].revision)>this.revision||!this.canonical){const rows=await sb(query+'&select=*',{},true);if(generation!==this.generation||!rows?.length)return;const row=rows[0];this.changed();if(Number(row.revision)>=this.revision){this.canonical=row.payload;this.revision=Number(row.revision);this.project()}}if(this.status!=='Live')this.status='Syncing'}catch(e){if(generation===this.generation)this.problem(e)}finally{this.pulling=false}},
+ async flush(){if(this.busy||!this.room||!this.pending.length||!navigator.onLine)return;this.busy=true;const generation=this.generation,room=this.room;try{while(this.pending.length&&generation===this.generation){const next=this.pending[0],rows=await sb('/rest/v1/rpc/edit_canvas_room',{method:'POST',body:{target:room,operation_id:next.id,changes:next.changes}},true);if(generation!==this.generation)return;this.pending.shift();this.remember();const row=rows[0];if(Number(row.revision)>=this.revision){this.canonical=row.payload;this.revision=Number(row.revision)}this.project();this.channel?.send({type:'broadcast',event:'changed',payload:{revision:this.revision}})}this.lastError=null}catch(e){if(generation===this.generation)this.problem(e)}finally{if(generation===this.generation){this.busy=false;this.paintStatus()}}},
+ project(){if(!this.canonical||board().sharedRoom!==this.room||drag||isEditing())return;this.changed();let doc=this.canonical;for(const queued of this.pending)doc=CollaborationModel.apply(doc,queued.changes);const b=board();if(JSON.stringify(this.snapshot())===JSON.stringify(doc)){this.baseline=clone(doc);return}Object.assign(b,doc.board,{sharedRoom:this.room,nodes:clone(doc.nodes),edges:clone(doc.edges),strokes:clone(doc.strokes)});state.topics=state.topics.filter(t=>t.boardId!==b.id).concat(clone(doc.topics));state.sequences=sequences().filter(s=>s.boardId!==b.id).concat(clone(doc.sequences));this.baseline=this.snapshot();renderAll();save();this.paintStatus()},
+ pointer(e){if(!this.channel||tab!=='whiteboard'||document.hidden||!$('#modalBackdrop').classList.contains('hidden'))return;const now=performance.now();if(now-this.lastPointer<65)return;this.lastPointer=now;const r=$('#canvas').getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom){this.sendPointer(null);return}this.sendPointer({x:(e.clientX-r.left-pan.x)/zoom,y:(e.clientY-r.top-pan.y)/zoom})},
+ sendPointer(point){if(!this.channel)return;const moving=drag?.type==='node'?board().nodes.filter(n=>n.id===drag.node?.id||drag.group?.some(g=>g.node.id===n.id)).slice(0,30).map(n=>({id:n.id,x:n.x,y:n.y})):[];this.channel.send({type:'broadcast',event:'cursor',payload:{peer:this.user,name:this.name().slice(0,40),boardId:board().id,point,moving}})},
+ paintCursors(){
+  const layer=$('#collaboratorCursors');if(!layer)return;const now=Date.now(),visible=new Set();
+  for(const [id,p] of this.peers){if(now-p.seen>8000){this.peers.delete(id);continue}if(tab!=='whiteboard'||!p.point||!Number.isFinite(p.point.x)||!Number.isFinite(p.point.y))continue;
+   visible.add(id);let cursor=[...layer.children].find(el=>el.dataset.peer===id);
+   if(!cursor){cursor=document.createElement('div');cursor.className='collab-cursor';cursor.dataset.peer=id;cursor.innerHTML='<svg viewBox="0 0 24 24"><path d="M3 2l5 18 4-7 8-3z"/></svg><span></span>';layer.append(cursor)}
+   cursor.style.transform=`translate(${p.point.x*zoom+pan.x}px,${p.point.y*zoom+pan.y}px)`;cursor.style.setProperty('--peer-color',['#fa8250','#a182ed','#ed6c9b','#23b6c7'][[...id].reduce((a,c)=>a+c.charCodeAt(0),0)%4]);cursor.querySelector('span').textContent=p.name;
+  }
+  for(const cursor of [...layer.children])if(!visible.has(cursor.dataset.peer))cursor.remove();
+  if(drag)return;const moving=new Map();for(const p of this.peers.values())if(now-p.seen<600)for(const n of p.moving||[]){if(Number.isFinite(n.x)&&Number.isFinite(n.y)&&typeof n.id==='string')moving.set(n.id,n)}
+  let wires=false;for(const id of new Set([...(this.previewIds||[]),...moving.keys()])){const node=moving.get(id)||board().nodes.find(n=>n.id===id),el=$('#nodes')?.querySelector('[data-node="'+CSS.escape(id)+'"]');if(node&&el){el.style.left=node.x+'px';el.style.top=node.y+'px';wires=true}}
+  this.previewIds=new Set(moving.keys());if(wires&&tab==='whiteboard')renderBoardWires();
+ },
+ paintStatus(){const b=$('#shareCanvas'),p=$('#collabPresence');if(!b||!p)return;b.querySelector('span').textContent=board().sharedRoom?'Shared':'Share';let count=0;if(this.channel)count=Object.values(this.channel.presenceState()).flat().length;p.textContent=this.room?(this.pending.length?'Saving shared edits…':this.status)+(count?' · '+count+' online':''):'';p.title=this.lastError||'Collaborators on this canvas'},
+ async rooms(){return await sb('/rest/v1/canvas_rooms?select=id,title,owner_id,revision&order=updated_at.desc',{},true)},
+ async open(){
+  if(!this.identity()){toast('Sign in to share a canvas.');cloudSettings();return}
+  showModal(`<div class="modal-header"><div><div class="eyebrow">CREATE TOGETHER</div><h2 id="modalTitle">Share your canvas.</h2><p>Work on the same board, see live cursors, and plan together.</p></div>${closeButton()}</div><div id="collabDialog"><p>Loading shared canvases…</p></div>`,true);
+  try{const rooms=await this.rooms();if(!$('#collabDialog'))return;const current=rooms.find(r=>r.id===board().sharedRoom),owned=current?.owner_id===this.identity();$('#collabDialog').innerHTML=`<div class="collab-panel"><strong>${escapeHTML(board().title)}</strong><p>${current?'Shared edits save automatically. Both people can edit cards, wires, drawings, and shots.':'Share this board with another Sam’s Canvas account.'}</p>${!current?'<button class="primary-btn" id="startSharing">Share this canvas</button>':owned?'<form id="collabInvite"><label class="field"><span>Collaborator’s account email</span><input type="email" id="collabEmail" required placeholder="creator@example.com"></label><button class="primary-btn" type="submit">Invite collaborator</button></form><div id="collabMembers"></div>':'<p>You have edit access to this canvas.</p>'}</div><h3 class="collab-list-title">Shared with you</h3><div class="collab-room-list">${rooms.length?rooms.map(r=>`<button class="collab-room" data-collab-room="${r.id}"><span>${icon('board')}<strong>${escapeHTML(r.title)}</strong></span><small>${r.owner_id===this.identity()?'Owner':'Collaborator'} →</small></button>`).join(''):'<p>No shared canvases yet. When someone invites your account, their board will appear here.</p>'}</div><p class="collab-footnote">Invite someone who already has an account. They can find your canvas from Share → Shared with you. Your other boards stay private.</p><p id="collabError" role="status"></p>`;
+   $('#startSharing')?.addEventListener('click',()=>this.create());
+   $('#collabInvite')?.addEventListener('submit',async e=>{e.preventDefault();const button=e.target.querySelector('button');button.disabled=true;try{await sb('/rest/v1/rpc/invite_canvas_member',{method:'POST',body:{target:current.id,member_email:$('#collabEmail').value}},true);toast('Collaborator added. They can open this canvas from Share.');this.open()}catch(e){$('#collabError').textContent=e.message}finally{button.disabled=false}});
+   $$('[data-collab-room]').forEach(el=>el.onclick=()=>this.join(el.dataset.collabRoom));
+   if(owned){const members=await sb('/rest/v1/canvas_members?room_id=eq.'+current.id+'&select=user_id',{},true);const list=$('#collabMembers');if(list){list.innerHTML=members.map((m,i)=>`<div class="collab-member"><span>Collaborator ${i+1} · ${escapeHTML(m.user_id.slice(0,8))}</span><button class="text-btn" data-remove-member="${m.user_id}">Remove access</button></div>`).join('');$$('[data-remove-member]',list).forEach(el=>el.onclick=async()=>{try{await sb('/rest/v1/rpc/remove_canvas_member',{method:'POST',body:{target:current.id,member_id:el.dataset.removeMember}},true);this.open()}catch(e){$('#collabError').textContent=e.message}})}}
+  }catch(e){if($('#collabDialog'))$('#collabDialog').innerHTML='<div class="collab-panel"><strong>Collaboration needs to be enabled.</strong><p>'+escapeHTML(e.message)+'</p><p>Run the collaboration database migration in this project’s Supabase SQL editor, then open Share again.</p></div>'}
+ },
+ async create(){const button=$('#startSharing');button.disabled=true;try{const rows=await sb('/rest/v1/rpc/create_canvas_room',{method:'POST',body:{board_title:board().title,initial_payload:this.snapshot()}},true);board().sharedRoom=rows[0].id;save();await this.tick();await this.open()}catch(e){if($('#collabError'))$('#collabError').textContent=e.message;button.disabled=false}},
+ preserveLocalIds(doc){const old=state.boards.find(b=>b.id===doc.board.id);if(old){const previous=old.id;old.id=uid();for(const t of state.topics)if(t.boardId===previous)t.boardId=old.id;for(const s of sequences())if(s.boardId===previous)s.boardId=old.id;if(state.activeBoard===previous)state.activeBoard=old.id}const topicIds=new Set(doc.topics.map(t=>t.id));for(const t of state.topics)if(topicIds.has(t.id)){const previous=t.id;t.id=uid();for(const s of sequences())if(s.contentId===previous)s.contentId=t.id}const seqIds=new Set(doc.sequences.map(s=>s.id));for(const s of sequences())if(seqIds.has(s.id)){const previous=s.id;s.id=uid();for(const b of state.boards)for(const n of b.nodes)if(n.sequenceId===previous)n.sequenceId=s.id}},
+ async join(id){try{this.changed();await this.flush();const rows=await sb('/rest/v1/canvas_rooms?id=eq.'+encodeURIComponent(id)+'&select=*',{},true);if(!rows?.length)throw Error('This canvas is no longer shared with your account.');const doc=rows[0].payload;let b=state.boards.find(b=>b.sharedRoom===id);if(!b){this.preserveLocalIds(doc);b={...clone(doc.board),nodes:clone(doc.nodes),edges:clone(doc.edges),strokes:clone(doc.strokes),sharedRoom:id};state.boards.push(b);state.topics.push(...clone(doc.topics));state.sequences=sequences().concat(clone(doc.sequences))}closeModal();openBoard(b.id);save();await this.tick()}catch(e){toast(e.message)}}
+};

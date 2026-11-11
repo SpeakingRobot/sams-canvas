@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict');
+const {diff,apply,copy}=require('./dist/collaboration-model.js');
+const base={board:{id:'b1',title:'Video'},nodes:[{id:'n1',x:10,y:20,title:'Hook'},{id:'n2',x:40,y:50,title:'Research'}],edges:[],strokes:[],topics:[],sequences:[]};
+const a=copy(base),b=copy(base);a.nodes[0].x=100;b.nodes[1].title='Reference';
+assert.deepEqual(apply(apply(base,diff(base,a)),diff(base,b)),apply(apply(base,diff(base,b)),diff(base,a)),'Separate card edits must commute');
+const c=copy(base);c.nodes[0].title='New hook';
+assert.deepEqual(apply(apply(base,diff(base,a)),diff(base,c)).nodes[0],{id:'n1',x:100,y:20,title:'New hook'},'Moving and editing a card must preserve both properties');
+const removed=copy(base);removed.nodes.shift();assert.equal(apply(apply(base,diff(base,removed)),diff(base,c)).nodes.length,1,'A stale update must not resurrect a removed card');
+const drawn=copy(base);drawn.strokes.push({id:'ink1',points:[[1,2],[3,4]]});assert.deepEqual(apply(base,diff(base,drawn)),drawn);
+const cleared=copy(base);delete cleared.nodes[0].title;assert.deepEqual(apply(base,diff(base,cleared)),cleared);
+console.log('Collaboration merge checks passed.');
