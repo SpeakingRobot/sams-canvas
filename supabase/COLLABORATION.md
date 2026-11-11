@@ -21,6 +21,8 @@ Invites grant access immediately to an existing account; they do not send email.
 
 The owner can use **Share → Create invite link → Copy link**. Anyone with that link can join after signing into an account on the same Supabase project. Desktop links use `samscanvas://join?token=…` and open the installed app; web links from a hosted website open the web app. Localhost previews generate desktop links because a localhost address cannot be used by another computer. A signed-out recipient's invite is kept while they sign in. Desktop links require Sam’s Canvas to be installed.
 
+You can also open **Share → Join by invite link**, paste the complete desktop or web invite link in the field (or use **Paste link**), and click **Join canvas**. Invalid or expired links show an error in place so you can correct the link and retry. This uses the same invite permissions and requires no additional SQL migration.
+
 Links expire after seven days. Creating a new link replaces the previous link. **Disable link** prevents further joins; members who already joined keep access until the owner removes them. Only the hash of the random invite token is stored in Supabase, and the token table is not directly accessible to clients.
 
 ## Sync behavior

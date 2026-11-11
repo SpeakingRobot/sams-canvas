@@ -9,3 +9,11 @@ const removed=copy(base);removed.nodes.shift();assert.equal(apply(apply(base,dif
 const drawn=copy(base);drawn.strokes.push({id:'ink1',points:[[1,2],[3,4]]});assert.deepEqual(apply(base,diff(base,drawn)),drawn);
 const cleared=copy(base);delete cleared.nodes[0].title;assert.deepEqual(apply(base,diff(base,cleared)),cleared);
 console.log('Collaboration merge checks passed.');
+const {inviteToken}=require('./dist/collaboration-model.js'),token='a'.repeat(64);
+assert.equal(inviteToken('samscanvas://join?token='+token),token);
+assert.equal(inviteToken(' https://example.com/canvas/#join='+token+' '),token);
+assert.equal(inviteToken('https://example.com/#join=short'),null);
+assert.equal(inviteToken('javascript:alert(1)#join='+token),null);
+assert.equal(inviteToken('samscanvas://other?token='+token),null);
+assert.equal(inviteToken('unrelated text'),null);
+console.log('Invite paste validation passed for desktop/web links and invalid input.');
