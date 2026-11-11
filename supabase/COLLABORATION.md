@@ -31,6 +31,8 @@ Cards, wires, drawings, content details, scheduling, and shot lists persist in t
 
 Private Supabase Realtime channels carry presence, cursors, drag previews, and notifications to fetch durable updates. A revision poll catches missed notifications and checks membership every 1.5 seconds. Access removal is enforced on durable reads/writes immediately and the app disconnects the removed member’s channel on its next membership check. Cursors are never persisted in your board.
 
+Online collaborators appear beside Share as initial avatars with green rings. The connection label names the people connected to the board. Remote cursors show the current tool (including knife, pen, hand, sticky note, shapes, and stamps), with a tool label beside the collaborator's name. The online roster is also available inside Share. Presence is temporary, and disconnected collaborators are not shown with live cursors or green avatar rings. No additional SQL migration is required for these indicators.
+
 ## Validation
 
 `npm run check` and `npm test` include syntax and property-merge checks. During development, the migration was also executed against a temporary PostgreSQL runtime with owner/member/outsider roles, including retry and revocation checks. Two headless browser clients verified rendering, concurrent changes, and cursor positions with a simulated transport. A real two-account Supabase session must be checked after you apply the migration.

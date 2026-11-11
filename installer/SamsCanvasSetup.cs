@@ -372,7 +372,10 @@ namespace SamsCanvasSetup
 
         private static string FormatBytes(long bytes)
         {
-            return (bytes / 1048576.0).ToString("0.0") + " MB";
+            if(bytes<1024)return bytes.ToString("0")+" B";
+            if(bytes<1048576)return (bytes/1024.0).ToString("0.0")+" KB";
+            if(bytes<1073741824)return (bytes/1048576.0).ToString("0.0")+" MB";
+            return (bytes/1073741824.0).ToString("0.00")+" GB";
         }
 
         private void LaunchApp()

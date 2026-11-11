@@ -1,6 +1,6 @@
 {
   "name": "sams-canvas-creator-studio",
-  "version": "1.14.1",
+  "version": "1.14.2",
   "private": true,
   "description": "A thoughtful content research, planning, and publishing workspace.",
   "scripts": {
@@ -15,7 +15,7 @@
     "appId": "studio.threadline.app",
     "productName": "Sam's Canvas",
     "directories": {
-      "output": "release-1.14.1"
+      "output": "release-1.14.2"
     },
     "files": [
       "dist/**/*",

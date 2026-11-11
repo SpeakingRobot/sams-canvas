@@ -16,7 +16,7 @@ autoUpdater.autoDownload=false;
 autoUpdater.autoInstallOnAppQuit=false;
 autoUpdater.allowPrerelease=false;
 autoUpdater.on('checking-for-update',()=>sendUpdate('checking'));
-autoUpdater.on('update-available',info=>sendUpdate('available',{version:info.version,releaseDate:info.releaseDate}));
+autoUpdater.on('update-available',info=>sendUpdate('available',{version:info.version,releaseDate:info.releaseDate,packageSize:info.packages?.[process.arch]?.size||0,installerSize:info.files?.find(file=>/\.exe$/i.test(file.url))?.size||0}));
 autoUpdater.on('update-not-available',info=>sendUpdate('current',{version:info.version}));
 autoUpdater.on('download-progress',progress=>sendUpdate('progress',{percent:progress.percent,transferred:progress.transferred,total:progress.total,bytesPerSecond:progress.bytesPerSecond}));
 autoUpdater.on('update-downloaded',info=>{updateReady=true;sendUpdate('downloaded',{version:info.version})});
