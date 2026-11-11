@@ -1,6 +1,6 @@
 {
   "name": "sams-canvas-creator-studio",
-  "version": "1.15.0",
+  "version": "1.15.1",
   "private": true,
   "description": "A thoughtful content research, planning, and publishing workspace.",
   "scripts": {
@@ -8,14 +8,14 @@
     "check": "node --check dist/editor.js && node --check dist/gestures.js && node --check dist/studio.js && node --check dist/canvas-tools.js && node --check dist/projects.js && node --check dist/calendar.js && node --check dist/welcome.js && node --check dist/content.js && node --check dist/view-session.js && node --check dist/updater.js && node --check dist/tutorial.js && node --check dist/tutorial-integration.js && node --check dist/app.js && node --check dist/collaboration-model.js && node --check dist/collaboration.js && node --check dist/live-canvas.js && node --check dist/ink-geometry.js && node --check dist/ink-tools.js && node --check dist/sw.js && node --check server.mjs && node --check desktop/main.cjs && node --check desktop/preload.cjs",
     "desktop": "electron desktop/main.cjs",
     "desktop:build": "node desktop/prepare-installer.cjs && node --use-system-ca ./node_modules/electron-builder/cli.js --win nsis-web && powershell -NoProfile -ExecutionPolicy Bypass -File desktop/build-custom-installer.ps1",
-    "test": "node studio.test.cjs && node collaboration.test.cjs && node updater.test.cjs && node ink.test.cjs && node live-canvas.test.cjs"
+    "test": "node studio.test.cjs && node collaboration.test.cjs && node updater.test.cjs && node ink.test.cjs && node live-canvas.test.cjs && node collaboration-lifecycle.test.cjs"
   },
   "main": "desktop/main.cjs",
   "build": {
     "appId": "studio.threadline.app",
     "productName": "Sam's Canvas",
     "directories": {
-      "output": "release-1.15.0"
+      "output": "release-1.15.1"
     },
     "files": [
       "dist/**/*",

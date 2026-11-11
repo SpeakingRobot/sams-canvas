@@ -249,6 +249,7 @@ var CanvasEditor = {
   rename(b, value) {
     b.title = value.trim() || 'Untitled content';
     const content = this.ensureContent(b);
+    if (content) content.title = b.title;
     if (content) sequences().filter(s => s.boardId === b.id).forEach(s => s.contentTitle = content.title);
     b.nodes.filter(n => n.type === 'sequencer').forEach(n => n.title = content?.title || b.title);
     renderSidebar(); save();

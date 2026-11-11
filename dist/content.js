@@ -62,6 +62,7 @@ var ContentDetails = {
       checkpoint();
       if (content) {
         Object.assign(content, values);
+        const linked = state.boards.find(board => board.id === content.boardId); if (linked) linked.title = title;
         sequences().filter(sequence => sequence.boardId === content.boardId).forEach(sequence => { sequence.contentTitle = title; });
         state.boards.find(board => board.id === content.boardId)?.nodes.filter(node => node.type === 'sequencer').forEach(node => { node.title = title; });
       } else {
