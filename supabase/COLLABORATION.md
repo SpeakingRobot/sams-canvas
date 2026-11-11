@@ -33,6 +33,10 @@ Private Supabase Realtime channels carry presence, cursors, drag previews, and n
 
 Online collaborators appear beside Share as initial avatars with green rings. The connection label names the people connected to the board. Remote cursors show the current tool (including knife, pen, hand, sticky note, shapes, and stamps), with a tool label beside the collaborator's name. The online roster is also available inside Share. Presence is temporary, and disconnected collaborators are not shown with live cursors or green avatar rings. No additional SQL migration is required for these indicators.
 
+Version 1.15.0 streams temporary ink, card movement/resizing, wire previews, and text as it is typed. Text and embedded shot notes show a typing indicator. These previews are separate from saved state, so they can appear while the recipient is also working without changing their selection or camera. Durable changes still save through the room's existing property-level merge. Very long stroke previews are sampled to bound network traffic; the saved stroke retains its complete points.
+
+The eraser is in the whiteboard toolbar (**E**). Drag it over pen drawings to remove parts of a stroke. Adjust its size in the tool options; Ctrl Z restores the previous drawing. The eraser does not delete cards or references, which keep their existing Delete action. Erasing is also previewed live for collaborators.
+
 ## Validation
 
 `npm run check` and `npm test` include syntax and property-merge checks. During development, the migration was also executed against a temporary PostgreSQL runtime with owner/member/outsider roles, including retry and revocation checks. Two headless browser clients verified rendering, concurrent changes, and cursor positions with a simulated transport. A real two-account Supabase session must be checked after you apply the migration.

@@ -1,0 +1,11 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const node={id:'image',type:'image',x:10,y:20,w:300,src:'data:image/png;base64,'+'A'.repeat(1000000),title:'Photo'};
+const board={id:'board',nodes:[node],strokes:[]};const ctx={console,Map,Set,JSON,Number,Math,Date,drag:null,boardConnect:null,Collaboration:{lastPoint:null},board:()=>board,document:{activeElement:null}};
+vm.createContext(ctx);vm.runInContext(fs.readFileSync('dist/live-canvas.js','utf8'),ctx);const live=ctx.LiveCanvas;
+ctx.drag={type:'node',node,x:10,y:20,targetX:120,targetY:150,group:[]};let activity=live.sample();assert.equal(activity.nodes[0].x,120);assert.equal(activity.nodes[0].y,150);assert.ok(!('src'in activity.nodes[0]),'Dragging images must not rebroadcast image data');assert.ok(JSON.stringify(activity).length<2000);
+assert.equal(live.sample(),null,'Unchanged activity must not be rebroadcast every pointer frame');
+node.x=130;ctx.drag.targetX=130;activity=live.sample();assert.ok(activity,'Changed drag position must be transmitted');
+const points=Array.from({length:10000},(_,i)=>[i,i*.5]);ctx.drag={type:'ink',stroke:{id:'drawing',points,color:'#0d99ff',size:3}};activity=live.sample();assert.equal(activity.ink[0].points.length,2500);assert.equal(activity.ink[0].points.at(-1)[0],9999,'Preview sampling must retain the tip');assert.equal(points.length,10000,'The saved drawing keeps all its points');
+ctx.drag=null;live.lastInk=null;ctx.document.activeElement={matches:()=>true};board.nodes.push({id:'text',type:'text',x:20,y:20,w:200,plainText:'Live words'});live.draft={boardId:'board',nodeId:'text',until:Date.now()+2000};activity=live.sample();assert.equal(activity.nodes[0].plainText,'Live words');assert.equal(activity.typing,true);
+ctx.document.activeElement=null;assert.ok(!live.isTyping(),'Typing stops after focus leaves the editor');
+console.log('Live preview: image payload exclusion, unchanged-frame suppression, bounded ink sampling, complete saved ink, and typing focus passed.');

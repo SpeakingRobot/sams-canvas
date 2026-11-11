@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict'),{erase}=require('./dist/ink-geometry.js');
+const line=[[0,0],[100,0]];
+assert.deepEqual(erase(line,{x:50,y:0,r:10}),[[[0,0],[40,0]],[[60,0],[100,0]]]);
+assert.equal(erase(line,{x:50,y:100,r:10})[0],line,'Untouched paths retain their identity');
+assert.deepEqual(erase(line,{x:50,y:0,r:200}),[],'A path fully inside the eraser is removed');
+assert.deepEqual(erase([[5,5]],{x:5,y:5,r:2}),[]);
+const loop=[[0,0],[100,0],[100,100],[0,100],[0,0]],pieces=erase(loop,{x:50,y:0,r:10});
+assert.equal(pieces.length,2);assert.deepEqual(pieces[1].slice(-3),[[100,100],[0,100],[0,0]]);
+assert.deepEqual(line,[[0,0],[100,0]],'Erasing must not mutate the source used by Undo');
+console.log('Eraser geometry: partial cuts, untouched paths, full removal, loops, and Undo source integrity passed.');
