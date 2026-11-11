@@ -3,8 +3,8 @@
 ## Enable in Supabase
 
 1. Open the SQL Editor for the same Supabase project configured in Account & Cloud Sync.
-2. Paste the entire contents of `collaboration.sql` and click **Run**. Run `schema.sql` first if this is a new project.
-3. Reopen Sam’s Canvas 1.13.0. Both people must sign into their own accounts connected to this project.
+2. Paste the contents of `collaboration-setup.sql` and click **Run**. This includes the original sharing migration plus invite links. If `collaboration.sql` was already applied, you can run only `collaboration-links.sql`. Run `schema.sql` first if this is a new project.
+3. Reopen Sam’s Canvas 1.14.0. Both people must sign into their own accounts connected to this project.
 
 The migration runs in a transaction and can be run again. It adds `canvas_rooms`, `canvas_members`, `canvas_receipts`, membership policies, and four mutation functions. It does not alter `creator_workspaces`. No service-role key is used in the app.
 
@@ -16,6 +16,12 @@ The migration runs in a transaction and can be run again. It adds `canvas_rooms`
 4. Both can edit. Each person keeps their own pan, zoom, selection, and current tab. Colored cursors show where the other person is pointing on the whiteboard; drag previews update while moving cards.
 
 Invites grant access immediately to an existing account; they do not send email. Only the owner can invite or remove other members. The owner can remove access in the Share dialog. Other private boards are not shared.
+
+## Invite links
+
+The owner can use **Share → Create invite link → Copy link**. Anyone with that link can join after signing into an account on the same Supabase project. Desktop links use `samscanvas://join?token=…` and open the installed app; web links from a hosted website open the web app. Localhost previews generate desktop links because a localhost address cannot be used by another computer. A signed-out recipient's invite is kept while they sign in. Desktop links require Sam’s Canvas to be installed.
+
+Links expire after seven days. Creating a new link replaces the previous link. **Disable link** prevents further joins; members who already joined keep access until the owner removes them. Only the hash of the random invite token is stored in Supabase, and the token table is not directly accessible to clients.
 
 ## Sync behavior
 

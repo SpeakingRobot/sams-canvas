@@ -1,0 +1,17 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+(async()=>{
+ let event,checks=0,downloads=0,installs=0,modals=0,html='',elements={},timerId=0;const timers=new Map();
+ const element=()=>({textContent:'',style:{},addEventListener(type,fn){this[type]=fn}});
+ const bridge={onEvent(cb){event=cb},async check(){checks++;event({type:'available',version:'9.0.0'})},async download(){downloads++},async install(){installs++},async releaseNotes(){return {name:'Release',body:'Changes'}}};
+ const ctx={console,Set,Math,Number,Date,clearTimeout(id){timers.delete(id)},setTimeout(fn){timers.set(++timerId,fn);return timerId},window:{desktopUpdater:bridge,cloudSession:{access_token:'test',user:{id:'1'}},addEventListener(){}},document:{querySelector(s){return elements[s]||null}},Collaboration:{async flush(){}},closeButton:()=>'',toast(){},showModal(value){modals++;html=value;elements={};for(const id of value.matchAll(/id="([^"]+)"/g))elements['#'+id[1]]=element();if(value.includes('data-update-mode="progress"')){elements['.update-dialog[data-update-mode="progress"] .update-progress span']=element();elements['.update-dialog[data-update-mode="progress"]>p']=element()}}};
+ vm.createContext(ctx);vm.runInContext(fs.readFileSync('dist/updater.js','utf8')+';globalThis.ui=UpdaterUI;',ctx);
+ const settle=()=>new Promise(resolve=>setImmediate(resolve));const runTimers=async()=>{for(const [id,fn] of [...timers]){timers.delete(id);fn()}await settle()};
+ for(let i=0;i<5;i++)ctx.ui.sessionChanged();await runTimers();await runTimers();
+ assert.equal(checks,1,'Repeated session events must schedule only one check');assert.equal(modals,1,'Exactly one update prompt');assert.ok(html.includes('Update now'));
+ await ctx.ui.check(true);await runTimers();assert.equal(modals,1,'Auto recheck must not repeat the prompt for this version');
+ const click=elements['#updaterMainAction'].click;click();click();await settle();assert.equal(downloads,1,'One click starts one download; repeated clicks are coalesced');
+ event({type:'progress',percent:0,transferred:0,total:104857600,bytesPerSecond:0});assert.equal(elements['.update-dialog[data-update-mode="progress"] .update-progress span'].style.width,'0%');
+ event({type:'progress',percent:25,transferred:26214400,total:104857600,bytesPerSecond:1048576});assert.equal(elements['.update-dialog[data-update-mode="progress"] .update-progress span'].style.width,'25%');assert.ok(elements['.update-dialog[data-update-mode="progress"]>p'].textContent.includes('25.0 MB / 100.0 MB'));
+ event({type:'downloaded',version:'9.0.0'});event({type:'downloaded',version:'9.0.0'});await settle();assert.equal(installs,1,'Verified download installs automatically, exactly once');assert.ok(html.includes('Applying your update'));assert.ok(!html.includes('id="updaterMainAction"'),'No second install confirmation');
+ console.log('Updater: one prompt, one click, measured progress, and automatic install passed.');
+})().catch(error=>{console.error(error);process.exit(1)});

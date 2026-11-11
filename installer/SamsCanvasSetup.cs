@@ -29,7 +29,6 @@ namespace SamsCanvasSetup
         private readonly RoundedButton secondary = new RoundedButton();
         private readonly Panel stageLine = new Panel();
         private WebClient activeClient;
-        private Timer installPulse;
         private bool installing;
         private bool completed;
         private readonly string existingPackage;
@@ -59,8 +58,7 @@ namespace SamsCanvasSetup
             Font = new Font("Segoe UI", 10F);
             BuildLayout();
             ShowInTaskbar = true;
-            installPulse = new Timer { Interval = 650 };
-            installPulse.Tick += delegate { progress.Value = progress.Value >= 99 ? 95 : progress.Value + 1; };
+            Shown += async delegate { if(updateMode) await BeginInstall(); };
         }
 
         private void BuildLayout()
@@ -192,32 +190,31 @@ namespace SamsCanvasSetup
                 if (existingPackage != null)
                 {
                     packagePath = existingPackage;
-                    SetStage("VERIFYING YOUR UPDATE", "Checking the app package before applying the update.", 5);
+                    SetStage("VERIFYING YOUR UPDATE", "Checking the app package before applying the update.", 0);
                 }
                 else
                 {
-                    SetStage("DOWNLOADING YOUR WORKSPACE", "Getting the app package securely from the latest release.", 1);
-                    await Download(files.PackageUrl, packagePath, 0, 91, files.PackageSize);
+                    SetStage("DOWNLOADING YOUR WORKSPACE", "Getting the app package securely from the latest release.", 0);
+                    await Download(files.PackageUrl, packagePath, files.PackageSize);
                 }
-                SetStage("VERIFYING DOWNLOAD", "Checking the package before installation.", 98);
-                Verify(packagePath, files.PackageHash);
+                SetStage("VERIFYING DOWNLOAD", "Checking the package before installation.", 0);
+                await Task.Run(delegate { Verify(packagePath, files.PackageHash); });
 
-                SetStage("PREPARING INSTALL", "Preparing the verified Windows installer engine.", 95);
+                SetStage("DOWNLOADING INSTALLER", "Getting the installation engine from GitHub.", 0);
                 secondary.Text = "Preparing…";
                 secondary.Enabled = false;
-                await Download(files.EngineUrl, setupPath, 95, 4, files.EngineSize);
-                VerifySha256(setupPath, files.EngineHash);
+                await Download(files.EngineUrl, setupPath, files.EngineSize);
+                SetStage("VERIFYING INSTALLER", "Checking the installer engine.", 0);
+                await Task.Run(delegate { VerifySha256(setupPath, files.EngineHash); });
                 var engineArgs = new System.Text.StringBuilder("/S --package-file=\"").Append(packagePath).Append("\"");
                 if (updateMode) engineArgs.Append(" --updated");
                 if (forceRun) engineArgs.Append(" --force-run");
                 if (!String.IsNullOrEmpty(installDirectory)) engineArgs.Append(" /D=\"").Append(installDirectory).Append("\"");
-                state.Text = "INSTALLING YOUR UPDATE";
+                SetStage(updateMode ? "INSTALLING YOUR UPDATE" : "INSTALLING SAM'S CANVAS", "Installing app files and shortcuts. This window will update when setup completes.", 0);
                 using (Process child = Process.Start(new ProcessStartInfo(setupPath, engineArgs.ToString()) { UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden }))
                 {
                     if (child == null) throw new InvalidOperationException("The Windows installer could not be started.");
-                    installPulse.Start();
                     await Task.Run(delegate { child.WaitForExit(); });
-                    installPulse.Stop();
                     if (child.ExitCode != 0) throw new InvalidOperationException("Setup did not finish successfully (code " + child.ExitCode + "). Please try again.");
                 }
                 completed = true;
@@ -225,6 +222,7 @@ namespace SamsCanvasSetup
                 state.Text = "YOUR CREATIVE SPACE IS READY";
                 body.Text = updateMode ? "Sam's Canvas is up to date. Your workspace is ready." : "Sam's Canvas is installed. Open it now and start planning your next story.";
                 percent.Text = "DONE";
+                progress.Visible = true;
                 progress.Value = 100;
                 primary.Text = "Open Sam's Canvas";
                 primary.Fill = blue;
@@ -244,7 +242,6 @@ namespace SamsCanvasSetup
             catch (Exception error)
             {
                 if (IsDisposed || Disposing) return;
-                installPulse.Stop();
                 installing = false;
                 primary.Enabled = true;
                 secondary.Enabled = true;
@@ -301,17 +298,19 @@ namespace SamsCanvasSetup
             return result;
         }
 
-        private async Task Download(string url, string path, double start, double span, long total)
+        private async Task Download(string url, string path, long total)
         {
             if (File.Exists(path)) File.Delete(path);
             using (WebClient client = new WebClient())
             {
                 activeClient = client;
+                Stopwatch timer = Stopwatch.StartNew();
                 client.Headers[HttpRequestHeader.UserAgent] = "SamsCanvas-Setup";
                 client.DownloadProgressChanged += delegate(object sender, DownloadProgressChangedEventArgs e)
                 {
-                    double p = start + span * e.ProgressPercentage / 100.0;
-                    SetProgress((int)Math.Min(99, p), e.BytesReceived, total);
+                    long actualTotal = e.TotalBytesToReceive > 0 ? e.TotalBytesToReceive : total;
+                    int p = actualTotal > 0 ? (int)Math.Min(100,e.BytesReceived*100.0/actualTotal) : 0;
+                    SetProgress(p, e.BytesReceived, actualTotal, timer.Elapsed.TotalSeconds);
                 };
                 try { await client.DownloadFileTaskAsync(new Uri(url), path); }
                 finally { if (activeClient == client) activeClient = null; }
@@ -356,21 +355,24 @@ namespace SamsCanvasSetup
             state.Text = label;
             body.Text = message;
             progress.Value = value;
-            percent.Text = value > 0 ? value.ToString("0") + "%" : "";
+            progress.Visible = value > 0;
+            percent.Text = "";
         }
 
-        private void SetProgress(int value, long received, long total)
+        private void SetProgress(int value, long received, long total, double seconds)
         {
-            if (InvokeRequired) { BeginInvoke(new Action(delegate { SetProgress(value, received, total); })); return; }
-            progress.Value = Math.Max(progress.Value, value);
-            percent.Text = progress.Value.ToString("0") + "%";
-            if (total > 0)
-                body.Text = "Downloading " + FormatBytes(received) + " of " + FormatBytes(total) + ". Your files are checked before setup.";
+            if (InvokeRequired) { BeginInvoke(new Action(delegate { SetProgress(value, received, total, seconds); })); return; }
+            progress.Visible = total > 0;
+            progress.Value = value;
+            percent.Text = total > 0 ? value.ToString("0") + "%" : "";
+            double speed=seconds>0?received/seconds:0;
+            string eta=speed>0&&total>received?" · about "+Math.Ceiling((total-received)/speed)+"s left":"";
+            body.Text = FormatBytes(received)+(total>0?" / "+FormatBytes(total):"")+(speed>0?" · "+FormatBytes((long)speed)+"/s":"")+eta;
         }
 
         private static string FormatBytes(long bytes)
         {
-            return (bytes / 1048576.0).ToString("0") + " MB";
+            return (bytes / 1048576.0).ToString("0.0") + " MB";
         }
 
         private void LaunchApp()
@@ -517,9 +519,14 @@ namespace SamsCanvasSetup
         [STAThread]
         private static void Main(string[] args)
         {
+            bool first;
+            using(var mutex=new System.Threading.Mutex(true,"Local\\SamsCanvasSetup",out first))
+            {
+            if(!first)return;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new SetupWindow(args));
+            }
         }
     }
 }

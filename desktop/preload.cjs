@@ -1,4 +1,5 @@
 const {contextBridge,ipcRenderer}=require('electron');
+ipcRenderer.on('canvas:invite',(_event,url)=>{if(typeof url==='string')window.dispatchEvent(new CustomEvent('canvas:invite',{detail:url}))});
 
 contextBridge.exposeInMainWorld('desktopUpdater',Object.freeze({
  version:()=>ipcRenderer.invoke('updater:version'),
