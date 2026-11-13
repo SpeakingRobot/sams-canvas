@@ -8,3 +8,5 @@
 .collab-leave{margin-top:18px}.video-player{display:block;width:100%;aspect-ratio:16/9;border:0;border-radius:inherit;background:#141416}
 
 .collab-online-avatar.reconnecting{border-color:var(--muted,#9296a2)}
+
+#followBanner{position:fixed;z-index:60;top:85px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:18px;padding:10px 16px;border:1px solid var(--accent);border-radius:14px;background:var(--surface);color:var(--text);box-shadow:0 8px 24px #0002;font-size:12px}#followBanner button{background:var(--accent);color:white;border:0;border-radius:8px;padding:7px 10px;cursor:pointer}.friend-row{display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)}.friend-row>div{flex:1}.friend-row small{display:block;color:var(--text-3);margin-top:5px}.friend-dot{width:10px;height:10px;border-radius:50%;background:#8a8a94}.friend-dot.online{background:#35cc7b;box-shadow:0 0 0 4px #35cc7b22}
