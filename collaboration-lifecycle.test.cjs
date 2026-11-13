@@ -4,3 +4,5 @@ const headers=require('./desktop/embed-headers.cjs');assert.equal(headers({url:'
 console.log('Collaboration lifecycle: independent save/presence state, resync grace, departed peers, and desktop YouTube identity passed.');
 
 c.dirty=false;c.appliedRevision=c.revision;c.pending=[];let snapshots=0;c.snapshot=()=>{snapshots++;throw Error('Idle canvas copied unnecessarily')};for(let i=0;i<1000;i++){c.changed();c.project()}assert.equal(snapshots,0);console.log('Idle collaboration: 1,000 no-change checks perform no workspace snapshots or projection.');
+
+let now=0,sent=0;ctx.performance={now:()=>now};ctx.tab='whiteboard';ctx.document={hidden:false};ctx.pan={x:0,y:0};ctx.zoom=1;ctx.$=selector=>selector==='#modalBackdrop'?{classList:{contains:()=>true}}:{getBoundingClientRect:()=>({left:0,top:0,right:1000,bottom:1000})};c.lastPointer=-100;c.sendPointer=()=>sent++;for(now=0;now<1000;now++)c.pointer({clientX:100,clientY:100});assert.equal(sent,20,'High-rate mouse input must fit the two-person free-tier message budget');console.log('Cursor traffic: 1,000 inputs coalesce to 20 broadcasts per second.');
